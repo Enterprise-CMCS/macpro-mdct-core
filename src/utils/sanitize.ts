@@ -7,7 +7,6 @@ const domPurify = DOMPurify(windowEmulator);
 
 // sanitize string
 export const sanitizeString = (string: string) => {
-  console.log(domPurify.isSupported);
   if (domPurify.isSupported) {
     return domPurify.sanitize(string);
   } else {

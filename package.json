@@ -5,11 +5,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "coverage": "jest --coverage",
+    "test": "jest --setupFiles",
     "build": "./node_modules/typescript/bin/tsc",
     "clean": "rm -rf dist"
   },
-  "author": "",
   "exports": {
     "./types": {
       "types": "./dist/types/index.d.ts",
@@ -49,8 +49,9 @@
     "transform": {
       "^.+\\.ts?$": "ts-jest"
     },
-    "ignore": [
-      "dist"
+    "testPathIgnorePatterns": [
+      "<rootDir>/build/",
+      "<rootDir>/node_modules/"
     ],
     "globals": {
       "isolatedModules": true

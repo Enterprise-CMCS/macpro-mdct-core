@@ -1,7 +1,13 @@
+# dependencies
+/node_modules
 .yarn_install
-node_modules
+package-lock.json
+
+# testing
+/coverage
+
+# misc
 .DS_Store
 tsconfig.tsbuildinfo
-*.log
-package-lock.json
 .vscode/
+*.log
