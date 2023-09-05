@@ -15,4 +15,5 @@ install_deps() {
 install_deps
 export PATH=$(pwd)/node_modules/.bin/:$PATH
 
+install_deps
 yarn run coverage

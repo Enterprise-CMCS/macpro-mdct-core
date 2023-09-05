@@ -6,7 +6,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "coverage": "jest --coverage",
-    "test": "jest --setupFiles",
+    "test": "jest --setupFiles dotenv/config",
     "build": "./node_modules/typescript/bin/tsc",
     "clean": "rm -rf dist"
   },
