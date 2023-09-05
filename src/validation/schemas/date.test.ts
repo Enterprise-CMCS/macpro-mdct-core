@@ -19,8 +19,6 @@ describe("Test date schema", () => {
   });
 
   it("should correctly validate end dates in comparison to start dates", () => {
-    const schema = endDate("startDate");
-
     const nestedSchema = object({
       startDate: date,
       endDate: endDate("startDate"),

@@ -5,7 +5,6 @@ import {
   checkStandardNumberInputAgainstRegexes,
   isWhitespaceString,
   validNAValues,
-  whitespaceStringRegex,
 } from "../../utils";
 import { errors } from "../errors";
 

@@ -1,4 +1,3 @@
-import DOMPurify from "dompurify";
 import { sanitizeArray, sanitizeObject, sanitizeString } from "./sanitize";
 
 describe("Test sanitization utilities", () => {

@@ -4,7 +4,7 @@ describe("Test checkbox schema", () => {
   it("should correctly validate checkbox values", () => {
     const schema = checkbox;
     expect(
-      checkbox.isValidSync([
+      schema.isValidSync([
         {
           key: "foo",
           value: "bar",
@@ -12,28 +12,28 @@ describe("Test checkbox schema", () => {
       ])
     ).toBe(true);
     expect(
-      checkbox.isValidSync([
+      schema.isValidSync([
         {
           key: "foo",
         },
       ])
     ).toBe(false);
     expect(
-      checkbox.isValidSync([
+      schema.isValidSync([
         {
           value: "bar",
         },
       ])
     ).toBe(false);
     expect(
-      checkbox.isValidSync([
+      schema.isValidSync([
         {
           key: "",
           value: "bar",
         },
       ])
     ).toBe(false);
-    expect(checkbox.isValidSync([])).toBe(false);
+    expect(schema.isValidSync([])).toBe(false);
   });
   it("should correctly validate optional checkbox values", () => {
     const schema = checkboxOptional;

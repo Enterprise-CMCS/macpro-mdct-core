@@ -5,7 +5,6 @@ import {
   numberOrNARequired,
   numberRequired,
 } from "./number";
-import { nonWhitespaceTextRequired } from "./text";
 
 describe("Test number schema", () => {
   it("should correctly validate required number fields", () => {
