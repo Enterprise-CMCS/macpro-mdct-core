@@ -1,4 +1,4 @@
-import { isWhitespaceString, whitespaceStringRegex } from "../../utils";
+import { isWhitespaceString } from "../../utils";
 import { string } from "yup";
 import { errors } from "../errors";
 
@@ -22,8 +22,10 @@ export const nonWhitespaceTextOptional = nonWhitespaceText
   .nullable()
   .notRequired();
 
-// The backend doesn't care what the content of the string is, because
-// we allow you to save incorrect states.
+/*
+ * The backend doesn't care what the content of the string is, because
+ * we allow you to save incorrect states.
+ */
 export const anyText = string().nullable().notRequired();
 
 export const email = nonWhitespaceTextRequired

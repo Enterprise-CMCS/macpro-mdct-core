@@ -2,10 +2,10 @@ import { isFulfilled, isRejected } from "../../utils";
 
 describe("Test promise utilities", () => {
   it("should correctly filter out rejected and fulfilled promises", async () => {
-    const promiseFulfill = new Promise((resolve, reject) => {
+    const promiseFulfill = new Promise((resolve, _reject) => {
       resolve(null);
     });
-    const promiseReject = new Promise((resolve, reject) => {
+    const promiseReject = new Promise((_resolve, reject) => {
       reject();
     });
 

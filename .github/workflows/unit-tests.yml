@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - "*"
+      - "dependabot/**"
+      - "!skipci*"
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set variable values
+        run: ./.github/scripts/build-vars.sh
+        env:
+          CODE_CLIMATE_ID: ${{ secrets.CODE_CLIMATE_ID }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+      - uses: actions/cache@v2
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/yarn.lock') }}
+      - name: set path
+        run: |
+          echo "PATH=$(pwd)/node_modules/.bin/:$PATH" >> $GITHUB_ENV
+      - name: Run unit tests
+        run: yarn && yarn coverage
+      - name: Publish test coverage to Code Climate
+        if: env.CODE_CLIMATE_ID != ''
+        uses: paambaati/codeclimate-action@v2.7.5
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CODE_CLIMATE_ID }}
+        with:
+          coverageLocations: |
+            ${{github.workspace}}/coverage/lcov.info:lcov
+      - name: Store unit test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit_test_results
+          path: ${{github.workspace}}/coverage/lcov.info
