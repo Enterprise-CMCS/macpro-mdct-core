@@ -29,7 +29,7 @@ jobs:
         run: |
           echo "PATH=$(pwd)/node_modules/.bin/:$PATH" >> $GITHUB_ENV
       - name: run unit tests
-        run: ./scripts/run-unit-tests.sh
+        run: yarn coverage
       - name: publish test coverage to code climate
         if: env.CODE_CLIMATE_ID != ''
         uses: paambaati/codeclimate-action@v2.7.5
