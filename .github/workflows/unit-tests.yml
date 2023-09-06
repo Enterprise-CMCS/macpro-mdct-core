@@ -25,9 +25,9 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
-      # - name: set path
-      #   run: |
-      #     echo "PATH=$(pwd)/node_modules/.bin/:$PATH" >> $GITHUB_ENV
+      - name: set path
+        run: |
+          echo "PATH=$(pwd)/node_modules/.bin/:$PATH" >> $GITHUB_ENV
       - name: run unit tests
         run: ./scripts/run-unit-tests.sh
       - name: publish test coverage to code climate

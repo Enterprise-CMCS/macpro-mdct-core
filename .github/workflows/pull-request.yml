@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: "14"
       - name: run unit tests
-        run: yarn test
+        run: ./scripts/run-unit-tests.sh
   assignAuthor:
     runs-on: ubuntu-latest
     steps:
