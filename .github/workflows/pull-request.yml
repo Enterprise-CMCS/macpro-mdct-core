@@ -13,7 +13,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
       - name: run unit tests
-        run: ./scripts/run-unit-tests.sh
+        run: yarn && yarn coverage
   assignAuthor:
     runs-on: ubuntu-latest
     steps:
