@@ -2,6 +2,10 @@
 
 set -e
 
+services=(
+  'src'
+)
+
 install_deps() {
   if [ "$CI" == "true" ]; then # If we're in a CI system
     if [ ! -d "node_modules" ]; then # If we don't have any node_modules, run yarn install --frozen-lockfile.  Otherwise, we're all set, do nothing.
@@ -12,8 +16,16 @@ install_deps() {
   fi
 }
 
+unit_test() {
+  service=$1
+  install_deps
+  yarn run coverage
+}
+
 install_deps
 export PATH=$(pwd)/node_modules/.bin/:$PATH
 
-install_deps
-yarn run coverage
+for i in "${services[@]}"
+do
+	unit_test $i
+done
