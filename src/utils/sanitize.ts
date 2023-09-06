@@ -42,8 +42,7 @@ const sanitizeEntry = (entry: unknown) => {
   const sanitizer = sanitizerMap[entryType];
   if (sanitizer) {
     return sanitizer(entry);
-  }
-  else {
+  } else {
     return entry;
   }
 };

@@ -8,7 +8,7 @@ jest.mock("dompurify", () => {
       ...jest.requireActual("dompurify")(windowEmulator),
     };
     return mockedLibrary;
-  }
+  };
 });
 
 describe("Test sanitization utilities", () => {
@@ -31,10 +31,12 @@ describe("Test sanitization utilities", () => {
   });
   it("should correctly sanitize nested arrays", () => {
     expect(
-      sanitizeArray([[
-        "<a href='&#x2000;javascript:alert(1)'>",
-        "<a href='&#x2000;javascript:alert(2)'>",
-      ]])
+      sanitizeArray([
+        [
+          "<a href='&#x2000;javascript:alert(1)'>",
+          "<a href='&#x2000;javascript:alert(2)'>",
+        ],
+      ])
     ).toEqual([["<a></a>", "<a></a>"]]);
   });
   it("should correctly sanitize an object", () => {
@@ -67,6 +69,9 @@ describe("test sanitization utilities in obsolete environments", () => {
     expect(sanitizeArray(["asdf", 5])).toEqual([null, 5]);
   });
   it("should null out string properties of objects", () => {
-    expect(sanitizeObject({ foo: "asdf", bar: 5 })).toEqual({ foo: null, bar: 5 });
+    expect(sanitizeObject({ foo: "asdf", bar: 5 })).toEqual({
+      foo: null,
+      bar: 5,
+    });
   });
-})
+});
