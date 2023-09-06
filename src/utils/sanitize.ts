@@ -40,7 +40,12 @@ const sanitizerMap: any = {
 const sanitizeEntry = (entry: unknown) => {
   const entryType = Array.isArray(entry) ? "array" : typeof entry;
   const sanitizer = sanitizerMap[entryType];
-  return sanitizer?.(entry) || entry;
+  if (sanitizer) {
+    return sanitizer(entry);
+  }
+  else {
+    return entry;
+  }
 };
 
 // Return true if the string is only whitespace; false otherwise.
