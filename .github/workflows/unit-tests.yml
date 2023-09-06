@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: set variable values
+      - name: Set variable values
         run: ./scripts/build-vars.sh
         env:
           CODE_CLIMATE_ID: ${{ secrets.CODE_CLIMATE_ID }}
@@ -33,9 +33,9 @@ jobs:
       - name: set path
         run: |
           echo "PATH=$(pwd)/node_modules/.bin/:$PATH" >> $GITHUB_ENV
-      - name: run unit tests
+      - name: Run unit tests
         run: yarn && yarn coverage
-      - name: publish test coverage to code climate
+      - name: Publish test coverage to Code Climate
         if: env.CODE_CLIMATE_ID != ''
         uses: paambaati/codeclimate-action@v2.7.5
         env:
