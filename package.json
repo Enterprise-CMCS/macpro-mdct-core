@@ -50,7 +50,7 @@
       "^.+\\.ts?$": "ts-jest"
     },
     "testPathIgnorePatterns": [
-      "<rootDir>/build/",
+      "<rootDir>/dist/",
       "<rootDir>/node_modules/"
     ],
     "globals": {
