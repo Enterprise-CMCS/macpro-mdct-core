@@ -1,9 +1,19 @@
 {
-  "name": "mdct-core",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@enterprise-cmcs/mdct-core",
+  "license": "CC0-1.0",
+  "version": "0.1.0",
+  "description": "Core functionality used across CMS MDCT applications",
+  "keywords": ["cms", "cmcs", "mdct"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "directory": "https://github.com/Enterprise-CMCS/macpro-mdct-core.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "coverage": "jest --coverage",
     "test": "jest --setupFiles dotenv/config",
@@ -74,7 +84,6 @@
       "<rootDir>/setupJest.ts"
     ]
   },
-  "license": "ISC",
   "dependencies": {
     "aws-amplify": "^4.3.4",
     "date-fns": "^2.26.0",
