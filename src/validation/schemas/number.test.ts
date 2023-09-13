@@ -17,6 +17,10 @@ describe("Test number schema", () => {
     expect(schema.isValidSync(null)).toBe(false);
     expect(schema.isValidSync("!@#!@%")).toBe(false);
     expect(schema.isValidSync("abc")).toBe(false);
+    expect(schema.isValidSync("$123")).toBe(true);
+    expect(schema.isValidSync("1$23")).toBe(false);
+    expect(schema.isValidSync("123%")).toBe(true);
+    expect(schema.isValidSync("12%3")).toBe(false);
   });
 
   it("should correctly validate optional number fields", () => {
