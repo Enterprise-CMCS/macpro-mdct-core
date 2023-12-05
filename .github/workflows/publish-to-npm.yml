@@ -19,7 +19,7 @@ jobs:
           node-version-file: ".nvmrc"
       - run: yarn
       - run: yarn build
-      - run: npx semantic-release --dry-run
+      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
