@@ -1,0 +1,20 @@
+  {
+    "release": {
+    "branches": [
+      "publish-changes"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+       "@semantic-release/git",
+       {
+        "assets": ["package.json"],
+        "message": "chore(release): ${nextRlease.version} [skip ci]"
+       }
+      ],
+      "@semantic-release/github",
+      "@semantic-release/npm"
+    ]
+  }
+}
