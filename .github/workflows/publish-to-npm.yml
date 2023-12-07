@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # gives temp GITHUB_TOKEN without setting in github actions secrets explicitly
+    # gives temp GITHUB_TOKEN without setting in github actions secrets explicitly.
     permissions:
       contents: write
       pull-requests: write
