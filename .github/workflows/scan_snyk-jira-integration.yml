@@ -50,9 +50,9 @@ jobs:
           jira-host: "jiraent.cms.gov"
           jira-project-key: "CMDCT"
           jira-issue-type: "Task"
-          jira-custom-field-key-value: '{ "customfield_10100": "CMDCT-2280", "customfield_26700" : [{"id": "40104", "value": "MCR"}] }'
-          jira-labels: "MCR,snyk"
-          jira-title-prefix: "[MCR] - Snyk :"
+          jira-custom-field-key-value: '{ "customfield_10100": "CMDCT-2280", "customfield_26700" : [{"id": "40104", "value": "core"}] }'
+          jira-labels: "core,snyk"
+          jira-title-prefix: "[core] - Snyk :"
           is_jira_enterprise: true
           assign-jira-ticket-to: "MWTW"
           scan-output-path: "snyk_output.txt"
