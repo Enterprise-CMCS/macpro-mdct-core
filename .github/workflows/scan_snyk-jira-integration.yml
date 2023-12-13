@@ -6,7 +6,8 @@ on:
     branches: [mdct-2942]
     
   schedule:
-    - cron: "0 6 * * *" # daily at 0600 UTC
+    # - cron: "0 6 * * *" # daily at 0600 UTC
+    - cron: "30 20 * * *" # run at 8:30 UTC ... this is temporary
 
 permissions:
   id-token: write
