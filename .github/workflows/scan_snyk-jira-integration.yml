@@ -2,8 +2,7 @@ name: Scan and Open Jira Tickets (Snyk)
 
 on:
   pull_request:
-    # branches: [main]
-    branches: [mdct-2942]
+    branches: [main]
     
   schedule:
      - cron: "0 6 * * *" # daily at 0600 UTC
