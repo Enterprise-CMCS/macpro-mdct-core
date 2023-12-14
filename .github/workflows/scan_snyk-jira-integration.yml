@@ -5,7 +5,8 @@ on:
     branches: [main]
     
   schedule:
-     - cron: "0 6 * * *" # daily at 0600 UTC
+    #  - cron: "0 6 * * *" # daily at 0600 UTC
+     - cron: "15 14 * * *" # daily at 0600 UTC
 
 permissions:
   id-token: write
