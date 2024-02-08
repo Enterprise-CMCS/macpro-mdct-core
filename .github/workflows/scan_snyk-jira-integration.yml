@@ -33,11 +33,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      # Clean up previous cache
-      - name: Clean up cache
-        run: |
-          rm -fr ~/.npm
-
       - name: Install Snyk and Run Snyk test
         run: |
           npm install -g snyk
@@ -65,3 +60,8 @@ jobs:
           assign-jira-ticket-to: "MWTW"
           scan-output-path: "snyk_output.txt"
           scan-type: "snyk"
+
+        
+      - name: Clean up cache
+        run: |
+          ls -la
