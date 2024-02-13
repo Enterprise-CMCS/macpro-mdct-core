@@ -40,6 +40,11 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
+      - name: check snyk json output nightly
+        run: |
+           echo '[' $(cat snyk_output.txt) ']' > snyk_output.txt
+           cat snyk_output.txt
+
       - name: use the custom github  action to parse Snyk output
         uses: Enterprise-CMCS/macfc-security-scan-report@v2.7.4
         with:
@@ -48,9 +53,9 @@ jobs:
           jira-host: "jiraent.cms.gov"
           jira-project-key: "CMDCT"
           jira-issue-type: "Task"
-          jira-custom-field-key-value: '{ "customfield_10100": "CMDCT-2280", "customfield_26700" : [{"id": "40100", "value": "core"}] }'
-          jira-labels: "core,snyk"
-          jira-title-prefix: "[core] - Snyk :"
+          jira-custom-field-key-value: '{ "customfield_10100": "CMDCT-2280", "customfield_26700" : [{"id": "40100", "value": "mdct-core"}] }'
+          jira-labels: "Core,snyk"
+          jira-title-prefix: "[Core] - Snyk :"
           is_jira_enterprise: true
           assign-jira-ticket-to: "MWTW"
           scan-output-path: "snyk_output.txt"
