@@ -11,7 +11,7 @@ jobs:
   snyk_run:
     name: Snyk Run (for PR and push)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
