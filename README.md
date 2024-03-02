@@ -1,6 +1,6 @@
 # macpro-mdct-core
 
-# NPM Version
+# @enterprise-cmcs/mdct-core version
 [![npm version](https://badge.fury.io/js/@enterprise-cmcs%2Fmdct-core.svg)](https://badge.fury.io/js/@enterprise-cmcs%2Fmdct-core)
 
 # Code Climate
