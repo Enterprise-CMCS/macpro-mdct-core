@@ -1,6 +1,6 @@
 # @enterprise-cmcs/mdct-core
 
-[![npm version](https://badge.fury.io/js/@enterprise-cmcs%2Fmdct-core.svg)](https://badge.fury.io/js/@enterprise-cmcs%2Fmdct-core) [![Maintainability](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/maintainability)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/test_coverage)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/test_coverage)
+[![npm version](https://img.shields.io/npm/v/@enterprise-cmcs/mdct-core/latest.svg)](https://www.npmjs.com/package/@enterprise-cmcs/mdct-core) [![Maintainability](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/maintainability)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/test_coverage)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/test_coverage)
 
 
 ### How to publish this package to npm
