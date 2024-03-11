@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - core-slack-integration
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,7 +34,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{job.status}}
-          SLACK_ICON: https://github.com/Enterprise-CMCS.png?size=48
+          SLACK_ICON: https://img.shields.io/npm/v/@enterprise-cmcs/mdct-core/latest.svg
           SLACK_TITLE: A new version of mdct-core has been published to NPM
           SLACK_USERNAME: ${{ github.repository }} - ${{job.status}}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
