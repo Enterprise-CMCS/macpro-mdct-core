@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - core-slack-integration
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,7 +20,10 @@ jobs:
       - run: yarn build
       - run: |
           npx semantic-release
-          echo "::set-output name=version_published::$(git describe --tags)"
+          version=$(git describe --tags)
+          echo "version_published=$version" >> $GITHUB_ENV
+      - run: |
+          echo "npm version published: ${version_published}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
