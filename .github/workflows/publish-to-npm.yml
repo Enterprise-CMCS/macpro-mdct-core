@@ -32,7 +32,7 @@ jobs:
     needs: 
       - build
     # if: github.event_name == 'release' && github.event.action == 'published'
-    if: github.event_name == 'release'
+    if: github.event_name == 'published'
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
