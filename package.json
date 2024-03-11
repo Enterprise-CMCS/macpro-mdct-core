@@ -135,8 +135,7 @@
   },
   "release": {
     "branches": [
-      "main",
-      "core-slack-integration"
+      "main"
     ],
     "plugins": [
       "@semantic-release/commit-analyzer",
@@ -146,4 +145,3 @@
     ]
   }
 }
-
