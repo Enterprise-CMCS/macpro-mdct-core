@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - core-slack-integration
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,9 +19,6 @@ jobs:
       - run: yarn build
       - run: |
           npx semantic-release
-          # version=$(git describe --tags)
-          # echo "version_published=$version" >> $GITHUB_ENV
-          # echo "npm version published: ${version_published}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -31,8 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build
-    # if: github.event_name == 'release' && github.event.action == 'published'
-    if: github.event_name == 'published'
+    if: github.event_name == 'release'
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
