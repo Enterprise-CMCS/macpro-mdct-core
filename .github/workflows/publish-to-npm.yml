@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build
-    if: ${{ success () && needs.build.outputs.version_published }}
+    if: ${{ success() && needs.build.outputs.version_published }}
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
