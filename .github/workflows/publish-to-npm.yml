@@ -22,7 +22,6 @@ jobs:
           npx semantic-release
           version=$(git describe --tags)
           echo "version_published=$version" >> $GITHUB_ENV
-      - run: |
           echo "npm version published: ${version_published}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
