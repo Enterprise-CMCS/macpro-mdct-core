@@ -2,6 +2,8 @@
 
 [![npm version](https://img.shields.io/npm/v/@enterprise-cmcs/mdct-core/latest.svg)](https://www.npmjs.com/package/@enterprise-cmcs/mdct-core) [![Maintainability](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/maintainability)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/3dd8c47fb161adc36946/test_coverage)](https://codeclimate.com/repos/64f79f2cb94c0076558d5147/test_coverage)
 
+https://www.npmjs.com/package/@enterprise-cmcs/mdct-core
+
 
 ## How to publish this package to npm
 The mdct-core npm package uses semantic-release to publish packages to the enterprise-cmcs npm org. To read more about semantic release please visit the following link: https://github.com/semantic-release/semantic-release
