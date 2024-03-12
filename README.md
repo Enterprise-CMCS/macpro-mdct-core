@@ -21,3 +21,4 @@ For example:
 **fix(publishing from CI): my commit message of choice**
 
 **note:** the commit message needs to be on the merge commit when merging into main
+
