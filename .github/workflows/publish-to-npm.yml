@@ -29,11 +29,15 @@ jobs:
       - build
     if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, 'fix') || contains(github.event.head_commit.message, 'feat') || contains(github.event.head_commit.message, 'perf') }}
     steps:
+      - name: Get Core Version
+        id: get_version
+        run: |
+          echo "VERSION=$(npm show @enterprise-cmcs/mdct-core version)" >> $GITHUB_ENV
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{job.status}}
-          SLACK_ICON: https://img.shields.io/npm/v/@enterprise-cmcs/mdct-core/latest.svg
-          SLACK_TITLE: A new version of mdct-core has been published to NPM
+          SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
+          SLACK_TITLE: "A new version of @enterprise-cmcs/mdct-core ** (${{ env.VERSION}}) ** has been published to NPM."
           SLACK_USERNAME: ${{ github.repository }} - ${{job.status}}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
