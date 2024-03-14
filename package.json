@@ -85,7 +85,7 @@
     ]
   },
   "dependencies": {
-    "aws-amplify": "^4.3.4",
+    "aws-amplify": "^5.3.15",
     "date-fns": "^2.26.0",
     "date-fns-tz": "^1.2.2",
     "dompurify": "^3.0.5",
