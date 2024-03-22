@@ -88,7 +88,7 @@
     "aws-amplify": "^6.0.17",
     "date-fns": "^3.3.1",
     "date-fns-tz": "^1.2.2",
-    "dompurify": "^3.0.5",
+    "dompurify": "^3.0.9",
     "jsdom": "^22.1.0",
     "pino": "^8.19.0",
     "prettier": "^3.2.5",
