@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  dependabot:
+  snyk:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'mdct-github-service-account' }}
     steps:
