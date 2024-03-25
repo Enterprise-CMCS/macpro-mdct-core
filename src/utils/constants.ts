@@ -1,9 +1,19 @@
+// BANNERS
+export const bannerId = "admin-banner-id";
+
+// FIELDS
 export const validNAValues = ["N/A", "Data not available"];
+
+export const dropdownDefaultOptionText = "- Select an option -";
+
+export const closeText = "Close";
+export const saveAndCloseText = "Save & close";
 
 // TIMEOUT PARAMS
 export const IDLE_WINDOW = 30 * 60 * 1000; // ms
 export const PROMPT_AT = 29 * 60 * 1000; //ms
 
+// STATES
 export enum States {
   AL = "Alabama",
   AK = "Alaska",

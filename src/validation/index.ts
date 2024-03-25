@@ -1,4 +1,1 @@
-export {
-  validationSchemaMap,
-  persistenceSchemaMap,
-} from "./schemas/schemaMaps";
+export { validationSchemaMap } from "./schemas/schemaMaps";
