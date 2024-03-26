@@ -42,17 +42,17 @@ jobs:
           SLACK_USERNAME: ${{ github.repository }} - ${{job.status}}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
-  notify_on_build_failure:
+  notify_on_test_failure:
     runs-on: ubuntu-latest
     needs: 
       - build
-    if: failure()
+    if: ${{ github.ref_name == 'main' && failure() }}
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{job.status}}
           SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
-          SLACK_TITLE: "The latest Core Build Has Failed"
+          SLACK_TITLE: "The latest merge to Core has failed Unit Tests"
           SLACK_USERNAME: ${{ github.repository }} - ${{job.status}}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
