@@ -4,45 +4,6 @@ export interface AnyObject {
   [key: string]: any;
 }
 
-export interface DynamoGet {
-  TableName: string;
-  Key: {
-    [key: string]: any;
-  };
-}
-
-export interface DynamoWrite {
-  TableName: string;
-  Item: { [key: string]: any };
-}
-
-export interface DynamoDelete {
-  TableName: string;
-  Key: { [key: string]: any };
-}
-
-export interface DynamoUpdate {
-  TableName: string;
-  Key: {
-    key: string;
-  };
-  UpdateExpression?: string;
-  ExpressionAttributeNames: { [key: string]: string };
-  ExpressionAttributeValues: { [key: string]: any };
-}
-
-export interface DynamoScan {
-  TableName: string;
-  [key: string]: any;
-}
-
-export const enum RequestMethods {
-  POST = "POST",
-  GET = "GET",
-  PUT = "PUT",
-  DELETE = "DELETE",
-}
-
 export const enum StatusCodes {
   SUCCESS = 200,
   CREATED = 201,
@@ -50,26 +11,6 @@ export const enum StatusCodes {
   UNAUTHORIZED = 403,
   NOT_FOUND = 404,
   SERVER_ERROR = 500,
-}
-
-export interface S3Put extends S3Get {
-  Body: string;
-  ContentType: string;
-}
-
-export interface S3Get {
-  Bucket: string;
-  Key: string;
-}
-
-export interface S3Copy {
-  Bucket: string;
-  CopySource: string;
-  Key: string;
-}
-
-export interface S3List {
-  Bucket: string;
 }
 
 export interface CompletionData {
@@ -108,65 +49,65 @@ export interface CustomHtmlElement {
   props?: AnyObject;
 }
 
-export const enum TemplateKeys {
-  MCPAR = "templates/mcpar-reporting-template.xlsx",
-  MLR = "templates/mlr-reporting-template.xlsx",
-  NAAAR = "templates/naaar-reporting-template.xlsx",
-}
+const states = [
+  "AL",
+  "AK",
+  "AZ",
+  "AR",
+  "CA",
+  "CO",
+  "CT",
+  "DE",
+  "DC",
+  "FL",
+  "GA",
+  "HI",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "KY",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NV",
+  "NH",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "PR",
+  "RI",
+  "SC",
+  "SD",
+  "TN",
+  "TX",
+  "UT",
+  "VT",
+  "VA",
+  "WA",
+  "WV",
+  "WI",
+  "WY",
+] as const;
+export type State = typeof states[number];
 
-export type State =
-  | "AL"
-  | "AK"
-  | "AZ"
-  | "AR"
-  | "CA"
-  | "CO"
-  | "CT"
-  | "DE"
-  | "DC"
-  | "FL"
-  | "GA"
-  | "HI"
-  | "ID"
-  | "IL"
-  | "IN"
-  | "IA"
-  | "KS"
-  | "KY"
-  | "LA"
-  | "ME"
-  | "MD"
-  | "MA"
-  | "MI"
-  | "MN"
-  | "MS"
-  | "MO"
-  | "MT"
-  | "NE"
-  | "NV"
-  | "NH"
-  | "NJ"
-  | "NM"
-  | "NY"
-  | "NC"
-  | "ND"
-  | "OH"
-  | "OK"
-  | "OR"
-  | "PA"
-  | "PR"
-  | "RI"
-  | "SC"
-  | "SD"
-  | "TN"
-  | "TX"
-  | "UT"
-  | "VT"
-  | "VA"
-  | "WA"
-  | "WV"
-  | "WI"
-  | "WY";
+export const isState = (state: unknown): state is State => {
+  return states.includes(state as State);
+};
 
 export interface FormTemplate {
   md5Hash: string;
@@ -174,12 +115,6 @@ export interface FormTemplate {
   id: string;
   lastAltered: string;
   reportType: string;
-}
-
-export function isDefined<T>(
-  possiblyUndefined: T | undefined
-): possiblyUndefined is T {
-  return typeof possiblyUndefined !== "undefined";
 }
 
 /**
@@ -204,3 +139,9 @@ export function isDefined<T>(
  */
 export type SomeRequired<T, K extends keyof T> = Required<Pick<T, K>> &
   Omit<T, K>;
+
+/**
+ * Instructs Typescript to complain if it detects that this function may be reachable.
+ * Useful for the default branch of a switch statement that verifiably covers every case.
+ */
+export const assertExhaustive = (_: never): void => {};

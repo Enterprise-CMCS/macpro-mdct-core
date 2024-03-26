@@ -18,5 +18,3 @@ export interface UserContextShape {
   updateTimeout: () => void;
   getExpiration: Function;
 }
-
-export type TUserRoles<T> = keyof T;

@@ -27,17 +27,3 @@ export const nonWhitespaceTextOptional = nonWhitespaceText
  * we allow you to save incorrect states.
  */
 export const anyText = string().nullable().notRequired();
-
-export const email = nonWhitespaceTextRequired
-  .email(errors.INVALID_EMAIL)
-  .required();
-export const emailOptional = nonWhitespaceTextOptional
-  .email(errors.INVALID_EMAIL)
-  .required();
-
-// URL
-export const url = nonWhitespaceTextRequired.url(errors.INVALID_URL).required();
-export const urlOptional = string()
-  .url(errors.INVALID_URL)
-  .nullable()
-  .notRequired();
