@@ -41,6 +41,5 @@ jobs:
         env:
           SLACK_COLOR: ${{job.status}}
           SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
-          SLACK_TITLE: "A new pull request has been created ${{ github.event.pull_request.number }}"
-          SLACK_USERNAME: ${{ github.repository }} - ${{job.status}}
+          SLACK_TITLE: "A new PR has been created by ${{ github.event.pull_request.user.login }} - ${{ github.event.pull_request.html_url }}"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
