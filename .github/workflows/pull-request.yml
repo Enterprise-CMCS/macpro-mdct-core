@@ -32,30 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - assignAuthor
-    # avoiding notifications for automated Snyk Pull Requests  
+    # avoiding notifications for automated Snyk Pull Requests and only when PR is opened or reopened   
     if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
     steps:
-      # - name: Get PR and last commit timestamps
-      #   id: timestamps
-      #   run: |
-      #     echo "PR_CREATED_AT=$(date -d "$(jq --raw-output '.pull_request.created_at' $GITHUB_EVENT_PATH)" +%s)" >> $GITHUB_ENV
-      #     echo "LAST_COMMIT_DATE=$(date -d "$(jq --raw-output '.commits[-1].timestamp // .pull_request.updated_at' $GITHUB_EVENT_PATH)" +%s)" >> $GITHUB_ENV
-  
-      # used to only run notifications when the pull request is created and not on every additional commit after
-      # - name: Compare timestamps
-      #   id: compare_timestamps
-      #   run: |
-      #     PR_CREATED_AT=$PR_CREATED_AT
-      #     LAST_COMMIT_DATE=$LAST_COMMIT_DATE
-      #     if [ "$LAST_COMMIT_DATE" -gt "$PR_CREATED_AT" ]; then
-      #       echo "send_notification=false" >> $GITHUB_ENV
-      #     else
-      #       echo "send_notification=true" >> $GITHUB_ENV
-      #     fi
-  
+
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
-        # if: env.send_notification == 'true'
         env:
           SLACK_TITLE: "A new pull request has been created by ${{ github.event.pull_request.user.login }} - ${{ github.event.pull_request.html_url }}"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
