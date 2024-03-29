@@ -40,20 +40,24 @@ jobs:
         id: timestamps
         run: |
           PR_CREATED_AT=$(jq --raw-output '.pull_request.created_at' $GITHUB_EVENT_PATH)
-          LAST_COMMIT_DATE=$(jq --raw-output '.commits[-1].timestamp' $GITHUB_EVENT_PATH)
+          LAST_COMMIT_DATE=$(jq --raw-output '.commits[-1].timestamp // .pull_request.updated_at' $GITHUB_EVENT_PATH)
           echo "::set-output name=pr_created_at::$PR_CREATED_AT"
           echo "::set-output name=last_commit_date::$LAST_COMMIT_DATE"
   
       - name: Compare timestamps
         id: compare_timestamps
         run: |
-          PR_CREATED_AT=$(date -d "${{ steps.timestamps.outputs.pr_created_at }}" +%s)
-          LAST_COMMIT_DATE=$(date -d "${{ steps.timestamps.outputs.last_commit_date }}" +%s)
-          TIME_DIFF=$((LAST_COMMIT_DATE - PR_CREATED_AT))
-          if [ $TIME_DIFF -gt 0 ]; then
-            echo "::set-output name=send_notification::false"
+          PR_CREATED_AT=$(date -d "${{ steps.timestamps.outputs.pr_created_at }}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "0")
+          LAST_COMMIT_DATE=$(date -d "${{ steps.timestamps.outputs.last_commit_date }}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "0")
+          if [ "$PR_CREATED_AT" != "0" ] && [ "$LAST_COMMIT_DATE" != "0" ]; then
+            TIME_DIFF=$((LAST_COMMIT_DATE - PR_CREATED_AT))
+            if [ $TIME_DIFF -gt 0 ]; then
+              echo "::set-output name=send_notification::false"
+            else
+              echo "::set-output name=send_notification::true"
+            fi
           else
-            echo "::set-output name=send_notification::true"
+            echo "::set-output name=send_notification::false"
           fi
   
       - name: Slack Notification
