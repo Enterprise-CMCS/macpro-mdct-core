@@ -40,7 +40,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{job.status}}
-          SLACKIFY_MARKDOWN: true
+          SLACKIFY_MARKDOWN: "true"
           SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
           SLACK_TITLE: "A new pull request has been created by ${{ github.event.pull_request.user.login }} - [<${{ github.event.pull_request.html_url }}|Pull Request>]"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
