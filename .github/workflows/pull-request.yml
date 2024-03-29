@@ -33,7 +33,7 @@ jobs:
     needs: 
       - assignAuthor
     # avoiding notifications for automated Snyk Pull Requests and only when PR is opened or reopened   
-    if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'ready_for_review')
     steps:
 
       - name: Slack Notification
