@@ -1,8 +1,6 @@
 name: Pull Request
 
-on:
-  pull_request:
-    types: [opened, reopened]
+on: [pull_request]
 
 jobs:
   prchecks:
@@ -35,7 +33,7 @@ jobs:
     needs: 
       - assignAuthor
     # avoiding notifications for automated Snyk Pull Requests  
-    if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request'
+    if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
     steps:
       # - name: Get PR and last commit timestamps
       #   id: timestamps
