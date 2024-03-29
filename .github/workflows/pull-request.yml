@@ -38,10 +38,9 @@ jobs:
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
-        with:
-          args: '{"attachments":[{"title":"A new pull request has been created by ${{ github.event.pull_request.user.login }}","title_link":"${{ github.event.pull_request.html_url }}","color":"good","fields":[{"title":"Pull Request","value":"<${{ github.event.pull_request.html_url }}|View Pull Request>"}]}]}'
         env:
-          # SLACK_COLOR: ${{job.status}}
-          # SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
-          # SLACK_TITLE: "A new pull request has been created by ${{ github.event.pull_request.user.login }} - [<${{ github.event.pull_request.html_url }}|Pull Request>]"
+          SLACK_COLOR: ${{job.status}}
+          SLACKIFY_MARKDOWN: true
+          SLACK_ICON: https://a.slack-edge.com/production-standard-emoji-assets/14.0/apple-medium/1f680@2x.png
+          SLACK_TITLE: "A new pull request has been created by ${{ github.event.pull_request.user.login }} - [<${{ github.event.pull_request.html_url }}|Pull Request>]"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
