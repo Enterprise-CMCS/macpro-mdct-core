@@ -34,10 +34,31 @@ jobs:
     needs: 
       - assignAuthor
     # avoiding notifications for automated Snyk Pull Requests  
-    if: github.actor != 'mdct-github-service-account'
+    if: github.actor != 'mdct-github-service-account' && github.event_name == 'pull_request'
     steps:
+      - name: Get PR and last commit timestamps
+        id: timestamps
+        run: |
+          PR_CREATED_AT=$(jq --raw-output '.pull_request.created_at' $GITHUB_EVENT_PATH)
+          LAST_COMMIT_DATE=$(jq --raw-output '.commits[-1].timestamp' $GITHUB_EVENT_PATH)
+          echo "::set-output name=pr_created_at::$PR_CREATED_AT"
+          echo "::set-output name=last_commit_date::$LAST_COMMIT_DATE"
+  
+      - name: Compare timestamps
+        id: compare_timestamps
+        run: |
+          PR_CREATED_AT=$(date -d "${{ steps.timestamps.outputs.pr_created_at }}" +%s)
+          LAST_COMMIT_DATE=$(date -d "${{ steps.timestamps.outputs.last_commit_date }}" +%s)
+          TIME_DIFF=$((LAST_COMMIT_DATE - PR_CREATED_AT))
+          if [ $TIME_DIFF -gt 0 ]; then
+            echo "::set-output name=send_notification::false"
+          else
+            echo "::set-output name=send_notification::true"
+          fi
+  
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
+        if: steps.compare_timestamps.outputs.send_notification == 'true'
         env:
           SLACK_TITLE: "A new pull request has been created by ${{ github.event.pull_request.user.login }} - ${{ github.event.pull_request.html_url }}"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
