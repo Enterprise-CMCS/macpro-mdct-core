@@ -28,7 +28,6 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
 
-
   notify_integrations_channel:
     runs-on: ubuntu-latest
     needs: 
@@ -39,25 +38,20 @@ jobs:
       - name: Get PR and last commit timestamps
         id: timestamps
         run: |
-          PR_CREATED_AT=$(jq --raw-output '.pull_request.created_at' $GITHUB_EVENT_PATH)
-          LAST_COMMIT_DATE=$(jq --raw-output '.commits[-1].timestamp // .pull_request.updated_at' $GITHUB_EVENT_PATH)
+          PR_CREATED_AT=$(date -d "$(jq --raw-output '.pull_request.created_at' $GITHUB_EVENT_PATH)" +%s)
+          LAST_COMMIT_DATE=$(date -d "$(jq --raw-output '.commits[-1].timestamp // .pull_request.updated_at' $GITHUB_EVENT_PATH)" +%s)
           echo "::set-output name=pr_created_at::$PR_CREATED_AT"
           echo "::set-output name=last_commit_date::$LAST_COMMIT_DATE"
   
       - name: Compare timestamps
         id: compare_timestamps
         run: |
-          PR_CREATED_AT=$(date -d "${{ steps.timestamps.outputs.pr_created_at }}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "0")
-          LAST_COMMIT_DATE=$(date -d "${{ steps.timestamps.outputs.last_commit_date }}" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || echo "0")
-          if [ "$PR_CREATED_AT" != "0" ] && [ "$LAST_COMMIT_DATE" != "0" ]; then
-            TIME_DIFF=$((LAST_COMMIT_DATE - PR_CREATED_AT))
-            if [ $TIME_DIFF -gt 0 ]; then
-              echo "::set-output name=send_notification::false"
-            else
-              echo "::set-output name=send_notification::true"
-            fi
-          else
+          PR_CREATED_AT=${{ steps.timestamps.outputs.pr_created_at }}
+          LAST_COMMIT_DATE=${{ steps.timestamps.outputs.last_commit_date }}
+          if [ "$LAST_COMMIT_DATE" -gt "$PR_CREATED_AT" ]; then
             echo "::set-output name=send_notification::false"
+          else
+            echo "::set-output name=send_notification::true"
           fi
   
       - name: Slack Notification
