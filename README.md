@@ -62,7 +62,18 @@ Please follow the following steps to make changes to the mdct-core npm package a
 10. **Finalize Changes for Publishing**:
     - Once development is complete and you are prepared to publish core changes to npm and consume them in your application from npm, proceed as follows:
         - In the `mdct-core` repository, run `yarn unlink` to unlink local changes.
-        - Confirm that your product no longer consumes local core changes by redeploying. 
+        - Confirm that your product no longer consumes local core changes by redeploying.
+     
+
+## Slack Webhooks:
+This repository uses two webhooks to publish to two different channels.
+- SLACK_WEBHOOK: This pubishes to the `macpro-mdct-core-alerts` channel in CMS Slack. Alerts published there are for build failures of the NPM package as well as new releases to the `@enterprise-cmcs` npm organization.
+- INTEGRATIONS_SLACK_WEBHOOK: This is used to publish new pull requests to the `proj-cms-mdct-integrations channel`
+    - Webhooks are created by CMS tickets, populated into GitHub Secrets
+
+
+
+
 
 
 
