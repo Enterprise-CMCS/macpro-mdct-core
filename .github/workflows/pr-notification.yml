@@ -7,7 +7,7 @@ on:
 jobs:
   notify_integrations_channel:
     runs-on: ubuntu-latest
-    # avoiding notifications for automated Snyk Pull Requests and only when PR is opened or reopened   
+    # avoiding notifications for automated Snyk Pull Requests  
     if: github.actor != 'mdct-github-service-account'
     steps:
 
