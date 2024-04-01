@@ -66,6 +66,6 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_TITLE: "A Synk auto merge has failed unit tests. See link below."
+          SLACK_TITLE: ":boom: A Synk auto merge has failed unit tests. See link below."
           SLACK_MESSAGE: "${{ steps.get_unit_test_run_url.outputs.test_run_url }}"
           SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
