@@ -63,7 +63,7 @@ jobs:
         id: get_unit_test_run_url
         run: |
           echo "Test Run URL: ${{ github.run_url }}"
-          echo "test_run_url"=${{ github.run_url }}" >> $GITHUB_OUTPUT
+          echo "test_run_url=${{ github.run_url }}" >> $GITHUB_ENV
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
