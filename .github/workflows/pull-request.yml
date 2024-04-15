@@ -34,7 +34,7 @@ jobs:
     needs: 
       - prchecks
     #only check branch names that begin with snyk-
-    if: startsWith(github.pull_requests[0].ref, 'refs/heads/snyk-') && failure()
+    if: startsWith(github.event.pull_requests[0].ref, 'refs/heads/snyk-') && failure()
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
