@@ -30,6 +30,7 @@ jobs:
 
   notify_on_pr_failure:
     runs-on: ubuntu-latest
+    needs: prchecks
     if: startsWith(github.ref, 'refs/heads/snyk-') && failure()
     steps:
       - name: Slack Notification
