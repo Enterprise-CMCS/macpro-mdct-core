@@ -27,3 +27,14 @@ jobs:
           PRNUM: ${{ github.event.pull_request.number }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
+
+  notify_on_pr_failure:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/snyk-') && failure()
+    steps:
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_TITLE: ":boom: A Snyk automerge in ${{ github.repository }} has failed."
+          MSG_MINIMAL: true
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
