@@ -3,28 +3,22 @@ name: Pull Request Notification
 on:
   workflow_call:
     inputs:
-      AWS_OIDC_ROLE_TO_ASSUME:
-        required: false  # Make this optional
-        type: string
-      AWS_DEFAULT_REGION:
-        required: false  # Make this optional
-        type: string
-      INTEGRATIONS_SLACK_WEBHOOK:
-        required: true
-        type: string
-      RETRIEVE_ENDPOINT:
+      retrieve_endpoint:
         required: false
         type: boolean
         default: false
     secrets:
-      AWS_OIDC_ROLE_TO_ASSUME: {}
-      AWS_DEFAULT_REGION: {}
-      INTEGRATIONS_SLACK_WEBHOOK: {}
+      slack_webhook:
+        required: true
+      aws_oidc_role_to_assume:
+        required: false
+      aws_default_region:
+        required: false
 
 jobs:
   endpoint:
     runs-on: ubuntu-latest
-    if: inputs.RETRIEVE_ENDPOINT == 'true'
+    if: inputs.retrieve_endpoint == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,8 +33,8 @@ jobs:
       - name: Configure AWS credentials for GitHub Actions
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          role-to-assume: ${{ secrets.aws_oidc_role_to_assume }}
+          aws-region: ${{ secrets.aws_default_region }}
       - name: get endpoint
         id: getendpoint
         run: |
@@ -67,4 +61,5 @@ jobs:
             ${{ github.event.pull_request.html_url }}
             Cloudfront URL: ${{ needs.endpoint.outputs.application_endpoint_url || 'N/A' }}
           MSG_MINIMAL: true
-          SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
+          # in our case this is the INTEGRATIONS_SLACK_WEBHOOK typically
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
