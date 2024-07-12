@@ -10,9 +10,9 @@ on:
     secrets:
       slack_webhook:
         required: true
-      aws_oidc_role_to_assume:
+      role-to-assume:
         required: false
-      aws_default_region:
+      aws-region:
         required: false
 
 jobs:
@@ -47,8 +47,8 @@ jobs:
         if: ${{ env.retrieve_endpoint_str == 'true' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws_oidc_role_to_assume: ${{ secrets.aws_oidc_role_to_assume }}
-          aws_default_region: ${{ secrets.aws_default_region }}
+          role-to-assume: ${{ secrets.role-to-assume }}
+          aws-region: ${{ secrets.aws-region }}
 
       - name: get endpoint
         id: getendpoint
