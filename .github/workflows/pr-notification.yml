@@ -18,25 +18,30 @@ on:
 jobs:
   endpoint:
     runs-on: ubuntu-latest
-    if: inputs.retrieve_endpoint == 'true'
+    # if: inputs.retrieve_endpoint == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: set branch_name
+        if: inputs.retrieve_endpoint == 'true'
         run: |
           BRANCH_NAME=$(./.github/setBranchName.sh ${{ github.event.pull_request.head.ref }})
           echo "branch_name=${BRANCH_NAME}" >> $GITHUB_ENV
       - name: set branch specific variable names
+        if: inputs.retrieve_endpoint == 'true'
         run: ./.github/build-vars.sh set_names
       - name: set variable values
+        if: inputs.retrieve_endpoint == 'true'
         run: ./.github/build-vars.sh set_values
       - name: Configure AWS credentials for GitHub Actions
+        if: inputs.retrieve_endpoint == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.aws_oidc_role_to_assume }}
           aws-region: ${{ secrets.aws_default_region }}
       - name: get endpoint
         id: getendpoint
+        if: inputs.retrieve_endpoint == 'true'
         run: |
           set +e
           application_endpoint_url=$(aws cloudformation describe-stacks --stack-name ui-${{ env.branch_name }} --output text --query "Stacks[0].Outputs[?OutputKey=='ApplicationEndpointUrl'].OutputValue")
