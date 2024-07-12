@@ -36,8 +36,8 @@ jobs:
         if: inputs.retrieve_endpoint == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.aws_oidc_role_to_assume }}
-          aws-region: ${{ secrets.aws_default_region }}
+          aws_oidc_role_to_assume: ${{ secrets.aws_oidc_role_to_assume }}
+          aws_default_region: ${{ secrets.aws_default_region }}
       - name: get endpoint
         id: getendpoint
         if: inputs.retrieve_endpoint == 'true'
