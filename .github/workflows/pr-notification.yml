@@ -18,7 +18,6 @@ on:
 jobs:
   endpoint:
     runs-on: ubuntu-latest
-    # if: inputs.retrieve_endpoint == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
