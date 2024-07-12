@@ -21,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Debug retrieve_endpoint
+        run: |
+          echo "retrieve_endpoint: ${{ inputs.retrieve_endpoint }}"
       - name: set branch_name
         if: inputs.retrieve_endpoint == 'true'
         run: |
