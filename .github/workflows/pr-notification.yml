@@ -1,81 +1,25 @@
 name: Pull Request Notification
 
 on:
-  workflow_call:
-    inputs:
-      retrieve_endpoint:
-        required: false
-        type: boolean
-        default: false
-    secrets:
-      slack_webhook:
-        required: true
-      role-to-assume:
-        required: false
-      aws-region:
-        required: false
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  endpoint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Debug retrieve_endpoint
-        run: |
-          echo "retrieve_endpoint: ${{ inputs.retrieve_endpoint }}"
-
-      - name: Convert retrieve_endpoint to string
-        run: echo "retrieve_endpoint_str=${{ inputs.retrieve_endpoint }}" >> $GITHUB_ENV
-
-      - name: set branch_name
-        if: ${{ env.retrieve_endpoint_str == 'true' }}
-        run: |
-          BRANCH_NAME=$(./.github/setBranchName.sh ${{ github.event.pull_request.head.ref }})
-          echo "branch_name=${BRANCH_NAME}" >> $GITHUB_ENV
-
-      - name: set branch specific variable names
-        if: ${{ env.retrieve_endpoint_str == 'true' }}
-        run: ./.github/build-vars.sh set_names
-
-      - name: set variable values
-        if: ${{ env.retrieve_endpoint_str == 'true' }}
-        run: ./.github/build-vars.sh set_values
-
-      - name: Configure AWS credentials for GitHub Actions
-        if: ${{ env.retrieve_endpoint_str == 'true' }}
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.role-to-assume }}
-          aws-region: ${{ secrets.aws-region }}
-
-      - name: get endpoint
-        id: getendpoint
-        if: ${{ env.retrieve_endpoint_str == 'true' }}
-        run: |
-          set +e
-          application_endpoint_url=$(aws cloudformation describe-stacks --stack-name ui-${{ env.branch_name }} --output text --query "Stacks[0].Outputs[?OutputKey=='ApplicationEndpointUrl'].OutputValue")
-          set -e
-          if [[ -z $application_endpoint_url || ! $application_endpoint_url == http* ]]; then
-              application_endpoint_url="endpoint not found"
-          fi
-          echo "application_endpoint_url=$application_endpoint_url" >> $GITHUB_OUTPUT
-
-    outputs:
-      application_endpoint_url: ${{ steps.getendpoint.outputs.application_endpoint_url }}
-
   notify_integrations_channel:
     runs-on: ubuntu-latest
-    needs: [endpoint]
+    # avoiding notifications for automated Snyk Pull Requests and draft pull requests 
+    if: github.actor != 'mdct-github-service-account' && !github.event.pull_request.draft
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_TITLE: ":github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}"
-          SLACK_MESSAGE: |
-            ${{ github.event.pull_request.html_url }}
-            Cloudfront URL: ${{ needs.endpoint.outputs.application_endpoint_url || 'N/A' }}
+          SLACK_MESSAGE: "${{ github.repository }} does not deploy any infra so no endpoint is available"
           MSG_MINIMAL: true
-          # in our case this is the INTEGRATIONS_SLACK_WEBHOOK typically
-          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
