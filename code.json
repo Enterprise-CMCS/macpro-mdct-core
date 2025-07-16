@@ -1,0 +1,60 @@
+{
+  "name": "macpro-mdct-core",
+  "description": "mdct-core is a CMCS MDCT repo currently being used for spiking consolidation of CI actions.",
+  "longDescription": "Standardized infrastructure and devops for MDCT developers",
+  "status": "Development",
+  "permissions": {
+    "licenses": [
+      {
+        "name": "CC0-1.0",
+        "URL": "https://github.com/Enterprise-CMCS/macpro-mdct-core/blob/main/LICENSE"
+      }
+    ],
+    "usageType": "openSource",
+    "exemptionText": ""
+  },
+  "organization": "Centers for Medicare & Medicaid Services",
+  "repositoryURL": "https://github.com/Enterprise-CMCS/macpro-mdct-core",
+  "projectURL": "",
+  "repositoryHost": "github.com/Enterprise-CMCS",
+  "repositoryVisibility": "public",
+  "vcs": "git",
+  "laborHours": 0,
+  "reuseFrequency": {
+    "forks": 2
+  },
+  "platforms": ["other"],
+  "categories": [
+    "application-development",
+    "it-development",
+    "project-collaboration"
+  ],
+  "softwareType": "addon",
+  "languages": ["Shell"],
+  "maintenance": "contract",
+  "contractNumber": "75FCMC24F0027",
+  "date": {
+    "created": "2023-07-24T14:47:20Z",
+    "lastModified": "2024-07-31T14:58:10Z",
+    "metaDataLastUpdated": "2025-07-16T19:52:40.549Z"
+  },
+  "tags": ["mdct"],
+  "contact": {
+    "email": "brendan.myers@coforma.com",
+    "name": "Brendan Myers"
+  },
+  "feedbackMechanisms": [
+    "https://github.com/Enterprise-CMCS/macpro-mdct-core/issues"
+  ],
+  "localisation": false,
+  "repositoryType": "tools",
+  "userInput": false,
+  "fismaLevel": "Moderate",
+  "group": "MDCT",
+  "projects": ["MDCT"],
+  "systems": [],
+  "upstream": "https://github.com/Enterprise-CMCS/macpro-mdct-core/network/dependencies",
+  "subsetInHealthcare": ["Medicaid"],
+  "userType": ["Government"],
+  "maturityModelTier": 3
+}
