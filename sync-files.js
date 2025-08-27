@@ -99,7 +99,7 @@ async function syncRepo(repo) {
 
   if (changesMade) {
     const syncHash = await getSyncHash(filesToSync);
-    const branchName = `${BRANCH_NAME}/${syncHash}`;
+    const branchName = `${BRANCH_NAME}-${syncHash}`;
     await git.checkoutLocalBranch(branchName);
     await git.add(filesToSync);
     await git.commit("sync: update source files");
