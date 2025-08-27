@@ -103,23 +103,7 @@ async function syncRepo(repo) {
     await git.checkoutLocalBranch(branchName);
     await git.add(filesToSync);
     await git.commit("sync: update source files");
-
     await git.push("origin", branchName);
-    // try {
-    // } catch (err) {
-    //   if (
-    //     err.message.includes("non-fast-forward") ||
-    //     err.message.includes("failed to push") ||
-    //     err.message.includes("Updates were rejected")
-    //   ) {
-    //     console.warn(
-    //       `Branch ${branchName} already exists on remote. Skipping push and PR.`
-    //     );
-    //     return;
-    //   } else {
-    //     throw err;
-    //   }
-    // }
 
     const [owner, repoName] = repo.split("/");
 
