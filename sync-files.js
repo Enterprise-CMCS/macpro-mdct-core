@@ -134,10 +134,10 @@ async function syncRepo(repo) {
       await octokit.pulls.create({
         owner,
         repo: repoName,
-        title: "Sync source files",
+        title: "Sync files managed by macpro-mdct-core",
         head: branchName,
         base: "main",
-        body: "This PR syncs files from the source repository.",
+        body: "# This PR syncs files that have been changed from the standardized version in this folder: https://github.com/Enterprise-CMCS/macpro-mdct-core/tree/main/files-to-sync\n ## If you have a better version you'd like to propogate, please make a PR in macpro-mdct-core so that we can get your idea pushed out to all repos!",
       });
     }
   }
