@@ -1,23 +1,26 @@
-name: Snyk auto-merge
+name: Dependabot auto-merge
 on:
   pull_request:
-  workflow_dispatch:
 
 permissions:
   pull-requests: write
   contents: write
 
 jobs:
-  snyk:
+  dependabot:
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'mdct-github-service-account' }}
+    if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
-      - name: Auto-approve Snyk PR
+      - name: Dependabotbot Gather Metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+      - name: Approve a PR
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Enable auto-merge for Snyk PRs
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ steps.metadata.outputs.update-type != 'version-update:semver-major'}}
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
