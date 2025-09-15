@@ -1,25 +1,36 @@
-name: Pull Request Notification
+name: PR Notification
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
-  id-token: write
   contents: write
+  id-token: write
   issues: write
   pull-requests: write
 
 jobs:
   notify_integrations_channel:
+    name: Notify integrations channel
+    if: >
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'mdct-github-service-account' &&
+      !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    # avoiding notifications for automated Snyk Pull Requests and draft pull requests 
-    if: github.actor != 'mdct-github-service-account' && !github.event.pull_request.draft
     steps:
-      - name: Slack Notification
+      - name: Slack notification
         uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_TITLE: ":github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}"
-          SLACK_MESSAGE: "${{ github.repository }} does not deploy any infra so no endpoint is available"
-          MSG_MINIMAL: true
-          SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
+    env:
+      MSG_MINIMAL: true
+      SLACK_MESSAGE: |
+        ${{ github.event.pull_request.html_url }}
+        Cloudfront URL: N/A
+      SLACK_TITLE: |
+        :github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}
+      SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}

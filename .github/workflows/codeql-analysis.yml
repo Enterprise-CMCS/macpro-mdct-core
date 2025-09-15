@@ -1,12 +1,12 @@
-name: "CodeQL"
+name: "CodeQL" # Keep as-is to avoid updating branch rules
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
+  schedule:
+    # run every Monday against main
+    - cron: "0 4 * * 1"
 
 jobs:
   analyze:
@@ -20,12 +20,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
-      - name: Perform CodeQL Analysis
+      - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v3
