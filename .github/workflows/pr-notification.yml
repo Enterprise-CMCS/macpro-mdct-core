@@ -1,4 +1,3 @@
-# This file is managed by macpro-mdct-core so if you'd like to change it let's do it there
 name: PR Notification
 
 on:
@@ -20,38 +19,6 @@ jobs:
     name: Checkout repo
     uses: ./.github/workflows/checkout-repo.yml
 
-  endpoint:
-    name: Endpoint
-    needs: setup
-    outputs:
-      application_endpoint_url: ${{ steps.cloudfront-endpoint.outputs.application_endpoint_url || 'N/A' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configure AWS credentials for GitHub Actions
-        if: needs.setup.outputs.app_name != 'core'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Get CloudFront endpoint
-        if: needs.setup.outputs.app_name != 'core'
-        id: cloudfront-endpoint
-        run: |
-          set -eo pipefail
-          application_endpoint_url=$(
-            aws cloudformation describe-stacks \
-              --stack-name "$STACK_NAME" \
-              --output text \
-              --query "Stacks[0].Outputs[?OutputKey=='CloudFrontUrl'].OutputValue" 2>/dev/null || true
-          )
-          if [[ -z "$application_endpoint_url" || ! "$application_endpoint_url" =~ ^https?:// ]]; then
-            application_endpoint_url="N/A"
-          fi
-          echo "application_endpoint_url=$application_endpoint_url" >> $GITHUB_OUTPUT
-        env:
-          STACK_NAME: ${{ needs.setup.outputs.app_name }}-${{ needs.setup.outputs.branch_name }}
-
   notify_integrations_channel:
     name: Notify integrations channel
     if: >
@@ -59,7 +26,6 @@ jobs:
       github.actor != 'github-actions[bot]' &&
       github.actor != 'mdct-github-service-account' &&
       !github.event.pull_request.draft
-    needs: endpoint
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification
@@ -68,7 +34,7 @@ jobs:
       MSG_MINIMAL: true
       SLACK_MESSAGE: |
         ${{ github.event.pull_request.html_url }}
-        Cloudfront URL: ${{ needs.endpoint.outputs.application_endpoint_url }}
+        Cloudfront URL: N/A
       SLACK_TITLE: |
         :github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}
       SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
