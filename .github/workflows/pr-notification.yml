@@ -15,10 +15,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  setup:
-    name: Checkout repo
-    uses: ./.github/workflows/checkout-repo.yml
-
   notify_integrations_channel:
     name: Notify integrations channel
     if: >
