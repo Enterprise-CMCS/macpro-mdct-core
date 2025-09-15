@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - main
-      - val
-      - production
   push:
     branches:
       - main
-      - val
-      - production
   schedule:
     # run every Monday against main
     - cron: "0 4 * * 1"
