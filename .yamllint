@@ -5,6 +5,7 @@ rules:
     present: false
   brackets:
     max-spaces-inside: 1
+  braces: disable
   colons:
     max-spaces-after: 1
     max-spaces-before: 0

@@ -44,11 +44,11 @@ jobs:
           jira-project-key: CMDCT
           jira-ignore-statuses: Done, Closed, Canceled
           jira-custom-fields: >-
-            '{ 
-              "customfield_10100": "CMDCT-2280", 
-              "customfield_26700" : 
+            '{
+              "customfield_10100": "CMDCT-2280",
+              "customfield_26700" :
                 [
-                  {"id": "${{ vars.JIRA_APP_CUSTOM_FIELD_ID }}", 
+                  {"id": "${{ vars.JIRA_APP_CUSTOM_FIELD_ID }}",
                   "value": "${{ vars.APP_NAME_UPPER }}"}
                 ]
             }'
