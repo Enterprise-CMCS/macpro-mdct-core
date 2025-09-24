@@ -1,4 +1,4 @@
-name: "CodeQL" # Keep as-is to avoid updating branch rules
+name: "CodeQL" #  Keep as-is to avoid updating branch rules
 
 on:
   pull_request:

@@ -45,7 +45,9 @@ Parameters:
   BootstrapVariant:
     Type: String
     Default: "AWS CDK: Default Resources"
-    Description: Describe the provenance of the resources in this bootstrap stack. Change this when you customize the template. To prevent accidents, the CDK CLI will not overwrite bootstrap stacks with a different variant.
+    Description: >-
+      Describe the provenance of the resources in this bootstrap stack. Change this when you customize the template. 
+      To prevent accidents, the CDK CLI will not overwrite bootstrap stacks with a different variant.
 Conditions:
   HasTrustedAccounts:
     Fn::Not:
@@ -206,7 +208,7 @@ Resources:
   StagingBucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
-      Bucket: { Ref: "StagingBucket" }
+      Bucket: {Ref: "StagingBucket"}
       PolicyDocument:
         Id: "AccessControl"
         Version: "2012-10-17"
@@ -215,10 +217,10 @@ Resources:
             Action: "s3:*"
             Effect: "Deny"
             Resource:
-              - { "Fn::Sub": "${StagingBucket.Arn}" }
-              - { "Fn::Sub": "${StagingBucket.Arn}/*" }
+              - {"Fn::Sub": "${StagingBucket.Arn}"}
+              - {"Fn::Sub": "${StagingBucket.Arn}/*"}
             Condition:
-              Bool: { "aws:SecureTransport": "false" }
+              Bool: {"aws:SecureTransport": "false"}
             Principal: "*"
   FilePublishingRole:
     Type: AWS::IAM::Role
@@ -444,7 +446,7 @@ Resources:
                 Effect: Allow
                 Action:
                   - ssm:GetParameter
-                  - ssm:GetParameters # CreateChangeSet uses this to evaluate any SSM parameters (like `CdkBootstrapVersion`)
+                  - ssm:GetParameters #  CreateChangeSet uses this to evaluate any SSM parameters (like `CdkBootstrapVersion`)
                 Resource:
                   - Fn::Sub: "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${CdkBootstrapVersion}"
             Version: "2012-10-17"
@@ -521,7 +523,7 @@ Resources:
             Resource: "*"
           # Add your specific organizational security policy here
           # Uncomment the example to deny access to AWS Config
-          #- Sid: OrganizationalSecurityPolicy
+          # - Sid: OrganizationalSecurityPolicy
           #  Action:
           #    - "config:*"
           #  Effect: Deny
