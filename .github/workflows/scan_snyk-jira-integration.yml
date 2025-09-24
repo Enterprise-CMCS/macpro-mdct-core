@@ -1,7 +1,6 @@
 name: Scan and Open Jira Tickets (Snyk)
 
 on:
-  workflow_dispatch:  # for testing and manual runs
   pull_request:
     branches: [main]
   schedule:
