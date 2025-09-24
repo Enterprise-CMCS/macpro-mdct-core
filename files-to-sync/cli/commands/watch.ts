@@ -11,7 +11,7 @@ export const watch = {
     return yargs.option("stage", { type: "string", demandOption: true });
   },
   handler: async (options: { stage: string }) => {
-    checkIfAuthenticated();
+    await checkIfAuthenticated();
 
     await Promise.all([
       runCommand(
