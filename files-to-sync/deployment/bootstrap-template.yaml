@@ -208,7 +208,7 @@ Resources:
   StagingBucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
-      Bucket: {Ref: "StagingBucket"}
+      Bucket: { Ref: "StagingBucket" }
       PolicyDocument:
         Id: "AccessControl"
         Version: "2012-10-17"
@@ -217,10 +217,10 @@ Resources:
             Action: "s3:*"
             Effect: "Deny"
             Resource:
-              - {"Fn::Sub": "${StagingBucket.Arn}"}
-              - {"Fn::Sub": "${StagingBucket.Arn}/*"}
+              - { "Fn::Sub": "${StagingBucket.Arn}" }
+              - { "Fn::Sub": "${StagingBucket.Arn}/*" }
             Condition:
-              Bool: {"aws:SecureTransport": "false"}
+              Bool: { "aws:SecureTransport": "false" }
             Principal: "*"
   FilePublishingRole:
     Type: AWS::IAM::Role
