@@ -20,6 +20,7 @@ jobs:
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
+
   assignAuthor:
     name: assignAuthor # Name needs to be unchanged to avoid updating branch rules
     if: github.event.pull_request.user.type != 'Bot' && github.event.action != 'synchronize'
