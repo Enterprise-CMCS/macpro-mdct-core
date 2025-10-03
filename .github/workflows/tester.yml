@@ -1,0 +1,12 @@
+name: Tester
+
+on:
+  pull_request:
+
+jobs:
+  prchecks:
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure pre-commit to skip irrelevant checks
+        run: echo "HELLO"
