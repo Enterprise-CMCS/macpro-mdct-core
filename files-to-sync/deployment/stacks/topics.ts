@@ -30,7 +30,7 @@ export function createTopicsComponents(props: CreateTopicsComponentsProps) {
 
   const service = "topics";
 
-  const deleteTopicsEnabled = !isDev;
+  const deleteTopicsEnabled = isDev;
 
   const lambdaSecurityGroup = new ec2.SecurityGroup(
     scope,
