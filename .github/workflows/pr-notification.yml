@@ -17,20 +17,16 @@ permissions:
 jobs:
   notify_integrations_channel:
     name: Notify integrations channel
-    if: >
-      github.actor != 'dependabot[bot]' &&
-      github.actor != 'github-actions[bot]' &&
-      github.actor != 'mdct-github-service-account' &&
-      !github.event.pull_request.draft
+    if: github.event.pull_request.user.type != 'Bot' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification
         uses: rtCamp/action-slack-notify@v2
-    env:
-      MSG_MINIMAL: true
-      SLACK_MESSAGE: |
-        ${{ github.event.pull_request.html_url }}
-        Cloudfront URL: N/A
-      SLACK_TITLE: |
-        :github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}
-      SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
+        env:
+          MSG_MINIMAL: true
+          SLACK_MESSAGE: |
+            ${{ github.event.pull_request.html_url }}
+            Cloudfront URL: N/A
+          SLACK_TITLE: |
+            :github: A new pull request has been created in ${{ github.repository }} by ${{ github.event.pull_request.user.login }}
+          SLACK_WEBHOOK: ${{ secrets.INTEGRATIONS_SLACK_WEBHOOK }}
