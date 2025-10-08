@@ -28,7 +28,7 @@ jobs:
 
   assignAuthor:
     name: assignAuthor # Name needs to be unchanged to avoid updating branch rules
-    if: github.event.pull_request.user.type != 'Bot' && github.event.action != 'synchronize'
+    if: github.event.pull_request.user.type != 'Bot' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: Assign PR to creator
