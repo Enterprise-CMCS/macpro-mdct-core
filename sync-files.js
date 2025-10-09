@@ -1,3 +1,4 @@
+// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files.js
 import { Octokit } from "@octokit/rest";
 import simpleGit from "simple-git";
 import fs from "fs/promises";
@@ -66,6 +67,17 @@ async function cloneRepo(repo) {
 }
 
 async function syncRepo(repo) {
+  const [owner, repoName] = repo.split("/");
+  const prs = await octokit.pulls.list({
+    owner,
+    repo: repoName,
+    base: "main",
+    state: "open",
+  });
+  const title = "Sync files managed by macpro-mdct-core";
+  const syncPrs = prs.data.filter((pr) => pr.title === title);
+  if (syncPrs.length > 0) return;
+
   const local = await cloneRepo(repo);
   const git = simpleGit(local);
 
@@ -105,25 +117,14 @@ async function syncRepo(repo) {
     await git.commit("sync: update source files");
     await git.push("origin", branchName);
 
-    const [owner, repoName] = repo.split("/");
-
-    const prs = await octokit.pulls.list({
+    await octokit.pulls.create({
       owner,
+      title,
       repo: repoName,
-      head: `${owner}:${branchName}`,
-      state: "open",
+      head: branchName,
+      base: "main",
+      body: "# This PR syncs files that have been changed from the standardized version in this folder: https://github.com/Enterprise-CMCS/macpro-mdct-core/tree/main/files-to-sync\n ## If you have a better version you'd like to propogate, please make a PR in macpro-mdct-core so that we can get your idea pushed out to all repos!",
     });
-
-    if (prs.data.length === 0) {
-      await octokit.pulls.create({
-        owner,
-        repo: repoName,
-        title: "Sync files managed by macpro-mdct-core",
-        head: branchName,
-        base: "main",
-        body: "# This PR syncs files that have been changed from the standardized version in this folder: https://github.com/Enterprise-CMCS/macpro-mdct-core/tree/main/files-to-sync\n ## If you have a better version you'd like to propogate, please make a PR in macpro-mdct-core so that we can get your idea pushed out to all repos!",
-      });
-    }
   }
 }
 
