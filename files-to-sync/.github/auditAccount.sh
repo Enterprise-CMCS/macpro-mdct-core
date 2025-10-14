@@ -78,7 +78,7 @@ untagged () {
 #Create array of objects with the topic name and parsed topic namespace
 get_topics () {
   pushd ../services/topics > /dev/null
-  local RAW_TOPICS="$(sls invoke --stage main --function listTopics | jq -r '.[]')"
+  local RAW_TOPICS="$(./run list-topics --stage main -q | jq -r '.[]')"
   popd > /dev/null
   local TOPICS=()
   for T in $RAW_TOPICS; do
