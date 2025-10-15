@@ -66,6 +66,8 @@ jobs:
         run: |
           # Executing the run command is required to assemble all the dependencies in the topics service
           ./run list-topics --stage $branch_name
+        env:
+          PROJECT: ${{ vars.APP_NAME_LOWER }}
 
       - name: Collect resources from account
         run: pushd .github && aws resourcegroupstaggingapi get-resources > resources.json
