@@ -27,12 +27,12 @@ export const runCommand = async (
   prefix: string,
   cmd: string[],
   cwd: string | null,
-  quiet?: boolean
+  opts?: { quiet?: boolean }
 ) => {
   const fullPath = cwd ? path.resolve(cwd) : null;
   const options = fullPath ? { cwd: fullPath } : {};
 
-  if (!quiet) {
+  if (!opts?.quiet) {
     const startingPrefix = formattedPrefix(prefix);
     process.stdout.write(
       `${startingPrefix} Running: ${cmd.join(" ")}\n` +
@@ -45,7 +45,7 @@ export const runCommand = async (
     const proc = spawn(cmd[0], cmd.slice(1), options);
 
     proc.stdout.on("data", async (data) => {
-      if (!quiet) {
+      if (!opts?.quiet) {
         const paddedPrefix = formattedPrefix(prefix);
         for (const line of data.toString().split("\n")) {
           process.stdout.write(`${paddedPrefix} ${line}\n`);
@@ -54,7 +54,7 @@ export const runCommand = async (
     });
 
     proc.stderr.on("data", async (data) => {
-      if (!quiet) {
+      if (!opts?.quiet) {
         const paddedPrefix = formattedPrefix(prefix);
         for (const line of data.toString().split("\n")) {
           process.stdout.write(`${paddedPrefix} ${line}\n`);
@@ -63,7 +63,7 @@ export const runCommand = async (
     });
 
     proc.on("error", async (error) => {
-      if (!quiet) {
+      if (!opts?.quiet) {
         const paddedPrefix = formattedPrefix(prefix);
         process.stdout.write(`${paddedPrefix} Error: ${error}\n`);
       }
@@ -71,7 +71,7 @@ export const runCommand = async (
     });
 
     proc.on("close", async (code) => {
-      if (!quiet) {
+      if (!opts?.quiet) {
         const paddedPrefix = formattedPrefix(prefix);
         process.stdout.write(`${paddedPrefix} Exit: ${code}\n`);
       }
