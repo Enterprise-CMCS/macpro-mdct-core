@@ -1,3 +1,4 @@
+// This file is managed by macpro-mdct-core so if you'd like to change it let's do it there
 import { runCommand } from "../lib/runner.js";
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -16,7 +17,7 @@ export const installDeps = async () => {
     "yarn install root",
     ["yarn", "--silent", "install", "--frozen-lockfile"],
     ".",
-    true
+    { quiet: true }
   );
 
   for (const dir of directories) {
@@ -24,7 +25,7 @@ export const installDeps = async () => {
       `yarn install ${dir}`,
       ["yarn", "--silent", "install", "--frozen-lockfile"],
       dir,
-      true
+      { quiet: true }
     );
   }
 };
