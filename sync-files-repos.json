@@ -1,9 +1,7 @@
 {
   "repos": [
-    "Enterprise-CMCS/macpro-mdct-carts",
     "Enterprise-CMCS/macpro-mdct-qmr",
     "Enterprise-CMCS/macpro-mdct-hcbs",
-    "Enterprise-CMCS/macpro-mdct-mcr",
-    "Enterprise-CMCS/macpro-mdct-seds"
+    "Enterprise-CMCS/macpro-mdct-mcr"
   ]
 }
