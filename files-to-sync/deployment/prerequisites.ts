@@ -40,7 +40,9 @@ export class PrerequisiteStack extends Stack {
     } else if (vpcName.endsWith("prod")) {
       githubEnvironmentName = "prod";
     } else {
-      throw new Error(`Could not determine GitHub environment from VPC ${vpcName}`);
+      throw new Error(
+        `Could not determine GitHub environment from VPC ${vpcName}`
+      );
     }
 
     if (!isLocalStack) {
