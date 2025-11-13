@@ -1,11 +1,16 @@
-// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files.js
+// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.js
 import { Octokit } from "@octokit/rest";
 import simpleGit from "simple-git";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
-import crypto from "crypto";
 import { fileURLToPath } from "url";
+import {
+  getAllFiles,
+  sha256,
+  getSyncHash,
+  loadReposFromConfig,
+} from "./sync-files-common.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
@@ -15,47 +20,8 @@ const BRANCH_NAME = "sync-files";
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_FILES_DIR = path.join(ROOT_DIR, "files-to-sync");
-const REPOS_FILE = path.join(ROOT_DIR, "sync-files-repos.json");
 
 const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "repo-sync-"));
-
-async function getAllFiles(dir, baseDir = dir) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        return getAllFiles(fullPath, baseDir);
-      } else {
-        return [path.relative(baseDir, fullPath)];
-      }
-    })
-  );
-  return files.flat();
-}
-
-async function sha256(filePath) {
-  const data = await fs.readFile(filePath);
-  return crypto.createHash("sha256").update(data).digest("hex");
-}
-
-async function getSyncHash(files) {
-  const hashes = await Promise.all(
-    files.map(async (relPath) => {
-      const absPath = path.join(SOURCE_FILES_DIR, relPath);
-      const content = await fs.readFile(absPath);
-      return crypto
-        .createHash("sha256")
-        .update(relPath + "\0" + content)
-        .digest("hex");
-    })
-  );
-  return crypto
-    .createHash("sha256")
-    .update(hashes.join(""))
-    .digest("hex")
-    .slice(0, 8);
-}
 
 async function cloneRepo(repo) {
   const dest = path.join(tmpRoot, repo.replace("/", "_"));
@@ -110,7 +76,7 @@ async function syncRepo(repo) {
   }
 
   if (changesMade) {
-    const syncHash = await getSyncHash(filesToSync);
+    const syncHash = await getSyncHash(filesToSync, SOURCE_FILES_DIR);
     const branchName = `${BRANCH_NAME}-${syncHash}`;
     await git.checkoutLocalBranch(branchName);
     await git.add(filesToSync);
@@ -129,8 +95,7 @@ async function syncRepo(repo) {
 }
 
 async function main() {
-  const raw = await fs.readFile(REPOS_FILE, "utf8");
-  const { repos } = JSON.parse(raw);
+  const repos = await loadReposFromConfig(true); // true = keep full path format
 
   for (const repo of repos) {
     try {

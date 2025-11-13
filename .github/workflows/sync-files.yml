@@ -31,6 +31,6 @@ jobs:
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Run sync script
-        run: node sync-files.js
+        run: node sync-files-github.js
         env:
           GITHUB_TOKEN: ${{ steps.app-token-step.outputs.token }}

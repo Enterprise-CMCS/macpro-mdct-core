@@ -2,7 +2,7 @@
   "type": "module",
   "scripts": {
     "sync-local": "node sync-files-local.js",
-    "sync-github": "node sync-files.js"
+    "sync-github": "node sync-files-github.js"
   },
   "devDependencies": {
     "@octokit/rest": "^22.0.0",

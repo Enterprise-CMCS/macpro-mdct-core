@@ -4,58 +4,21 @@
 
 import fs from "fs/promises";
 import path from "path";
-import crypto from "crypto";
 import { fileURLToPath } from "url";
+import {
+  getAllFiles,
+  sha256,
+  loadReposFromConfig,
+} from "./sync-files-common.js";
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_FILES_DIR = path.join(ROOT_DIR, "files-to-sync");
 const PROJECTS_DIR = path.dirname(ROOT_DIR); // Parent directory containing all repos
 
-// Default repos - all 6 apps
-const DEFAULT_REPOS = [
-  "macpro-mdct-carts",
-  "macpro-mdct-qmr",
-  "macpro-mdct-hcbs",
-  "macpro-mdct-mcr",
-  "macpro-mdct-mfp",
-  "macpro-mdct-seds",
-];
-
-// Get repos from environment variable or use defaults
+// Get repos from environment variable or load from config
 const reposToSync = process.env.REPOS
   ? process.env.REPOS.split(",").map((r) => r.trim())
-  : DEFAULT_REPOS;
-
-async function getAllFiles(dir, baseDir = dir) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = path.join(dir, entry.name);
-      // Skip node_modules and .cdk directories
-      if (
-        entry.isDirectory() &&
-        (entry.name === "node_modules" || entry.name === ".cdk")
-      ) {
-        return [];
-      }
-      if (entry.isDirectory()) {
-        return getAllFiles(fullPath, baseDir);
-      } else {
-        return [path.relative(baseDir, fullPath)];
-      }
-    })
-  );
-  return files.flat();
-}
-
-async function sha256(filePath) {
-  try {
-    const data = await fs.readFile(filePath);
-    return crypto.createHash("sha256").update(data).digest("hex");
-  } catch {
-    return null;
-  }
-}
+  : await loadReposFromConfig(false); // false = just repo names, not full paths
 
 async function syncLocalRepo(repoName) {
   const targetRepoDir = path.join(PROJECTS_DIR, repoName);
