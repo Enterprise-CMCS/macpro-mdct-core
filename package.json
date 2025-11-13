@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "sync-local": "node sync-files-local.js",
+    "sync-github": "node sync-files-github.js"
+  },
   "devDependencies": {
     "@octokit/rest": "^22.0.0",
     "simple-git": "^3.28.0"

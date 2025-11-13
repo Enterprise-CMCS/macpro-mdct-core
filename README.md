@@ -13,6 +13,6 @@ By centralizing the management of these files, the sync process streamlines coll
 ### Key Files
 
 - [Workflow configuration](.github/workflows/sync-files.yml)
-- [Sync script](sync-files.js)
+- [Sync script](sync-files-github.js)
 - [List of target repositories](sync-files-repos.json)
 - [Boilerplate files to sync](files-to-sync/)
