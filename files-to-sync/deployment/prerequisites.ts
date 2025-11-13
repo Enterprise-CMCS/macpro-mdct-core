@@ -15,11 +15,11 @@ import { CloudWatchLogsResourcePolicy } from "./constructs/cloudwatch-logs-resou
 import { loadDefaultSecret } from "./deployment-config";
 import { Construct } from "constructs";
 import { isLocalStack } from "./local/util";
+import { tryImport } from "./utils/misc";
 
 interface PrerequisiteConfigProps {
   project: string;
   vpcName: string;
-  branchFilter: string;
 }
 
 export class PrerequisiteStack extends Stack {
@@ -30,7 +30,18 @@ export class PrerequisiteStack extends Stack {
   ) {
     super(scope, id, props);
 
-    const { project, vpcName, branchFilter } = props;
+    const { project, vpcName } = props;
+
+    let githubEnvironmentName: string;
+    if (vpcName.endsWith("dev")) {
+      githubEnvironmentName = "dev";
+    } else if (vpcName.endsWith("impl")) {
+      githubEnvironmentName = "val";
+    } else if (vpcName.endsWith("prod")) {
+      githubEnvironmentName = "prod";
+    } else {
+      throw new Error(`Could not determine GitHub environment from VPC ${vpcName}`);
+    }
 
     if (!isLocalStack) {
       const vpc = ec2.Vpc.fromLookup(this, "Vpc", { vpcName });
@@ -81,7 +92,7 @@ export class PrerequisiteStack extends Stack {
             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
           },
           StringLike: {
-            "token.actions.githubusercontent.com:sub": `repo:Enterprise-CMCS/macpro-mdct-${project}:${branchFilter}`,
+            "token.actions.githubusercontent.com:sub": `repo:Enterprise-CMCS/macpro-mdct-${project}:environment:${githubEnvironmentName}`,
           },
         },
         "sts:AssumeRoleWithWebIdentity"
@@ -103,13 +114,11 @@ export class PrerequisiteStack extends Stack {
   }
 
   async addAdditionalPrerequisitesAsync(vpc: ec2.IVpc) {
-    try {
-      const { addAdditionalPrerequisites } = await import(
-        "./prerequisites-additional"
-      );
-      addAdditionalPrerequisites(this, vpc);
-    } catch (error) {
-      // prerequisites-additional.ts is optional and may not exist in all apps
+    const module = await tryImport<{
+      addAdditionalPrerequisites: (stack: Stack, vpc: ec2.IVpc) => void;
+    }>("./prerequisites-additional");
+    if (module?.addAdditionalPrerequisites) {
+      module.addAdditionalPrerequisites(this, vpc);
     }
   }
 }
