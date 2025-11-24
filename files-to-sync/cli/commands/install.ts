@@ -1,7 +1,7 @@
 // This file is managed by macpro-mdct-core so if you'd like to change it let's do it there
 import { runCommand } from "../lib/runner.js";
-import { readdir } from "fs/promises";
-import { join } from "path";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 const findPackageJsonDirs = async (dir: string = "."): Promise<string[]> => {
   const results: string[] = [];
