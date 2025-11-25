@@ -3,33 +3,21 @@ import { runCommand } from "../lib/runner.js";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
-const findPackageJsonDirs = async (dir: string = "."): Promise<string[]> => {
-  const results: string[] = [];
-
-  const scan = async (currentDir: string) => {
-    const entries = await readdir(currentDir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        // Skip these directories entirely
-        if (entry.name === "node_modules" || entry.name === ".cdk") {
-          continue;
-        }
-        await scan(join(currentDir, entry.name));
-      } else if (entry.name.toLowerCase() === "package.json") {
-        results.push(currentDir);
-      }
+async function* findPackageJsonDirectories(
+  directory: string
+): AsyncGenerator<string> {
+  const SKIP_DIRECTORIES = [".git", ".cdk", "node_modules"];
+  for (let entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && !SKIP_DIRECTORIES.includes(entry.name)) {
+      yield* findPackageJsonDirectories(join(directory, entry.name));
+    } else if (entry.isFile() && entry.name === "package.json") {
+      yield directory;
     }
-  };
-
-  await scan(dir);
-  return results;
-};
-
-const directories = await findPackageJsonDirs();
+  }
+}
 
 export const installDeps = async () => {
-  for (const dir of directories) {
+  for await (const dir of findPackageJsonDirectories(".")) {
     await runCommand(
       `yarn install ${dir}`,
       ["yarn", "--silent", "install", "--frozen-lockfile"],
