@@ -1,5 +1,6 @@
 {
   "name": "macpro-mdct-core",
+  "version": "",
   "description": "mdct-core is a CMCS MDCT repo currently being used for spiking consolidation of CI actions.",
   "longDescription": "Standardized infrastructure and devops for MDCT developers",
   "status": "Development",
@@ -15,11 +16,14 @@
   },
   "organization": "Centers for Medicare & Medicaid Services",
   "repositoryURL": "https://github.com/Enterprise-CMCS/macpro-mdct-core",
-  "projectURL": "",
   "repositoryHost": "github.com/Enterprise-CMCS",
   "repositoryVisibility": "public",
+  "homepageURL": "",
+  "downloadURL": "",
+  "disclaimerURL": "",
+  "disclaimerText": "",
   "vcs": "git",
-  "laborHours": 2369,
+  "laborHours": 4259,
   "reuseFrequency": {
     "forks": 2,
     "clones": 0
@@ -34,14 +38,22 @@
   ],
   "softwareType": "addon",
   "languages": [
-    "JavaScript"
+    "TypeScript",
+    "JavaScript",
+    "Shell"
   ],
   "maintenance": "contract",
-  "contractNumber": "75FCMC24F0027",
+  "contractNumber": [
+    "75FCMC24F0027"
+  ],
+  "SBOM": "https://github.com/Enterprise-CMCS/macpro-mdct-core/network/dependencies",
+  "relatedCode": [],
+  "reusedCode": [],
+  "partners": [],
   "date": {
     "created": "2023-07-24T14:47:20Z",
-    "lastModified": "2025-08-27T18:08:07Z",
-    "metaDataLastUpdated": "2025-09-01T00:17:17.471Z"
+    "lastModified": "2025-11-26T14:59:28Z",
+    "metadataLastUpdated": "2025-12-01T00:18:21.036Z"
   },
   "tags": [
     "mdct"
@@ -50,9 +62,8 @@
     "email": "brendan.myers@coforma.com",
     "name": "Brendan Myers"
   },
-  "feedbackMechanisms": [
-    "https://github.com/Enterprise-CMCS/macpro-mdct-core/issues"
-  ],
+  "feedbackMechanism": "https://github.com/Enterprise-CMCS/macpro-mdct-core/issues",
+  "AIUseCaseID": "0",
   "localisation": false,
   "repositoryType": "tools",
   "userInput": false,
@@ -62,7 +73,6 @@
     "MDCT"
   ],
   "systems": [],
-  "upstream": "https://github.com/Enterprise-CMCS/macpro-mdct-core/network/dependencies",
   "subsetInHealthcare": [
     "Medicaid"
   ],
