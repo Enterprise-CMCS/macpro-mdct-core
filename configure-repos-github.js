@@ -12,10 +12,14 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = path.join(ROOT_DIR, "repo-settings.json");
 
-/**
- * Default branch protection settings
- * These are used when a setting is not specified in the config
- */
+// TODO: configure all repos when ready
+const REPO_CONFIG = (await loadReposFromConfig(true))
+  .filter((repo) => repo.includes("seds")) // TODO: temp
+  .reduce((acc, repo) => {
+    acc[repo] = { dryRun: true };
+    return acc;
+  }, {});
+
 const DEFAULT_BRANCH_PROTECTION = {
   required_status_checks: null,
   enforce_admins: null,
@@ -54,28 +58,88 @@ async function getEnvironments(owner, repoName) {
   return data.environments.map((e) => e.name);
 }
 
-async function removeBranchProtection(owner, repoName, branch) {
-  await octokit.rest.repos.deleteBranchProtection({
-    owner,
-    repo: repoName,
-    branch,
-  });
-  console.log(`  Removed protection from branch: ${branch}`);
+async function getCurrentBranchProtection(owner, repoName, branch) {
+  try {
+    const { data } = await octokit.rest.repos.getBranchProtection({
+      owner,
+      repo: repoName,
+      branch,
+    });
+    return data;
+  } catch (error) {
+    if (error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
-async function deleteEnvironment(owner, repoName, environmentName) {
-  await octokit.rest.repos.deleteAnEnvironment({
-    owner,
-    repo: repoName,
-    environment_name: environmentName,
-  });
-  console.log(`  Deleted environment: ${environmentName}`);
+function compareObjects(current, desired, path = "") {
+  const changes = [];
+  const allKeys = new Set([
+    ...Object.keys(current || {}),
+    ...Object.keys(desired || {}),
+  ]);
+
+  for (const key of allKeys) {
+    const currentVal = current?.[key];
+    const desiredVal = desired?.[key];
+    const fullPath = path ? `${path}.${key}` : key;
+
+    if (
+      typeof currentVal === "object" &&
+      currentVal !== null &&
+      typeof desiredVal === "object" &&
+      desiredVal !== null &&
+      !Array.isArray(currentVal) &&
+      !Array.isArray(desiredVal)
+    ) {
+      changes.push(...compareObjects(currentVal, desiredVal, fullPath));
+    } else if (JSON.stringify(currentVal) !== JSON.stringify(desiredVal)) {
+      changes.push({
+        field: fullPath,
+        from: currentVal,
+        to: desiredVal,
+      });
+    }
+  }
+
+  return changes;
 }
 
-async function configureRepo(repo) {
+async function removeBranchProtection(owner, repoName, branch, dryRun) {
+  if (dryRun) {
+    console.log(`  [DRY RUN] Would remove protection from branch: ${branch}`);
+  } else {
+    await octokit.rest.repos.deleteBranchProtection({
+      owner,
+      repo: repoName,
+      branch,
+    });
+    console.log(`  Removed protection from branch: ${branch}`);
+  }
+}
+
+async function deleteEnvironment(owner, repoName, environmentName, dryRun) {
+  if (dryRun) {
+    console.log(`  [DRY RUN] Would delete environment: ${environmentName}`);
+  } else {
+    await octokit.rest.repos.deleteAnEnvironment({
+      owner,
+      repo: repoName,
+      environment_name: environmentName,
+    });
+    console.log(`  Deleted environment: ${environmentName}`);
+  }
+}
+
+async function configureRepo(repo, dryRun = true) {
   const [owner, repoName] = repo.split("/");
 
   console.log(`\nConfiguring repository: ${repo}`);
+  if (dryRun) {
+    console.log("  DRY RUN MODE - No changes will be applied\n");
+  }
 
   const configPath = CONFIG_PATH;
   console.log(`Loading config from: ${configPath}`);
@@ -84,40 +148,60 @@ async function configureRepo(repo) {
   const config = JSON.parse(configContent);
   console.log(`Configuration loaded successfully\n`);
 
-  // ========================================
-  // CONFIGURE BRANCH PROTECTION RULES
-  // ========================================
   console.log("Configuring Branch Protection Rules\n");
 
-  // Get currently protected branches
   const existingProtectedBranches = await getProtectedBranches(owner, repoName);
   const configuredBranches = config.branchProtection
     ? Object.keys(config.branchProtection)
     : [];
 
-  // Configure/update branch protection rules from config
   if (config.branchProtection && configuredBranches.length > 0) {
     for (const [branch, rules] of Object.entries(config.branchProtection)) {
       console.log(`  Protecting branch: ${branch}`);
 
-      // Merge with defaults to ensure all fields are set
-      // This ensures that if a setting is removed from config, it reverts to default
       const mergedRules = mergeWithDefaults(rules);
 
-      await octokit.rest.repos.updateBranchProtection({
+      const currentProtection = await getCurrentBranchProtection(
         owner,
-        repo: repoName,
-        branch,
-        ...mergedRules,
-      });
+        repoName,
+        branch
+      );
 
-      console.log(`  ${branch} configured successfully`);
+      if (currentProtection) {
+        const changes = compareObjects(currentProtection, mergedRules);
+        if (changes.length > 0) {
+          console.log(`  Changes detected:`);
+          for (const change of changes) {
+            console.log(
+              `    ${change.field}: ${JSON.stringify(
+                change.from
+              )} -> ${JSON.stringify(change.to)}`
+            );
+          }
+        } else {
+          console.log(`  No changes needed`);
+        }
+      } else {
+        console.log(
+          `  Branch ${branch} is currently unprotected - will add protection`
+        );
+      }
+
+      if (dryRun) {
+        console.log(`  [DRY RUN] Would update ${branch} branch protection`);
+      } else {
+        await octokit.rest.repos.updateBranchProtection({
+          owner,
+          repo: repoName,
+          branch,
+          ...mergedRules,
+        });
+        console.log(`  ${branch} branch protection updated`);
+      }
     }
   } else {
     console.log("  No branch protection rules found in config");
   }
-
-  // Remove protection from branches not in config
   const branchesToRemove = existingProtectedBranches.filter(
     (branch) => !configuredBranches.includes(branch)
   );
@@ -128,15 +212,12 @@ async function configureRepo(repo) {
     );
     for (const branch of branchesToRemove) {
       // TODO: be careful that the config is correct before enabling this
-      // await removeBranchProtection(owner, repoName, branch);
       console.log(`  Would remove protection from branch: ${branch}`);
+      // await removeBranchProtection(owner, repoName, branch, dryRun);
     }
   }
   console.log();
 
-  // ========================================
-  // CONFIGURE ENVIRONMENTS
-  // ========================================
   console.log("Configuring Environments\n");
 
   // Get currently configured environments
@@ -150,23 +231,38 @@ async function configureRepo(repo) {
     for (const env of config.environments) {
       console.log(`  Configuring environment: ${env.environment_name}`);
 
-      await octokit.rest.repos.createOrUpdateEnvironment({
-        owner,
-        repo: repoName,
-        environment_name: env.environment_name,
-        wait_timer: env.wait_timer,
-        prevent_self_review: env.prevent_self_review,
-        reviewers: env.reviewers,
-        deployment_branch_policy: env.deployment_branch_policy,
-      });
+      const isNew = !existingEnvironments.includes(env.environment_name);
+      if (isNew) {
+        console.log(`  Environment does not exist - will create`);
+      } else {
+        console.log(`  Environment exists - will update`);
+      }
 
-      console.log(`  ${env.environment_name} configured successfully`);
+      if (dryRun) {
+        console.log(
+          `  [DRY RUN] Would ${isNew ? "create" : "update"} environment`
+        );
+      } else {
+        await octokit.rest.repos.createOrUpdateEnvironment({
+          owner,
+          repo: repoName,
+          environment_name: env.environment_name,
+          wait_timer: env.wait_timer,
+          prevent_self_review: env.prevent_self_review,
+          reviewers: env.reviewers,
+          deployment_branch_policy: env.deployment_branch_policy,
+        });
+
+        console.log(
+          `  Environment ${env.environment_name} ${
+            isNew ? "created" : "updated"
+          }`
+        );
+      }
     }
   } else {
     console.log("  No environments found in config");
   }
-
-  // Remove environments not in config
   const environmentsToRemove = existingEnvironments.filter(
     (env) => !configuredEnvironments.includes(env)
   );
@@ -177,27 +273,43 @@ async function configureRepo(repo) {
     );
     for (const env of environmentsToRemove) {
       // TODO: be careful that the config is correct before enabling this
-      // await deleteEnvironment(owner, repoName, env);
       console.log(`  Would delete environment: ${env}`);
+      // await deleteEnvironment(owner, repoName, env, dryRun);
     }
   }
   console.log();
 
-  console.log(`All repository settings applied for ${repo}!`);
+  if (dryRun) {
+    console.log(`[DRY RUN] Completed analysis for ${repo}`);
+  } else {
+    console.log(`All repository settings applied for ${repo}`);
+  }
 }
 
 async function main() {
-  // TODO: configure all repos when ready
-  // const repos = loadReposFromConfig(CONFIG_PATH);
-  const repos = ["Enterprise-CMCS/macpro-mdct-qmr"];
+  const repos = Object.keys(REPO_CONFIG);
 
   console.log(`Configuring ${repos.length} repositories...\n`);
 
+  const dryRunRepos = repos.filter((repo) => REPO_CONFIG[repo].dryRun);
+  const liveRepos = repos.filter((repo) => !REPO_CONFIG[repo].dryRun);
+
+  if (dryRunRepos.length > 0) {
+    console.log(`Dry run mode: ${dryRunRepos.length} repos`);
+    dryRunRepos.forEach((repo) => console.log(`  - ${repo}`));
+  }
+  if (liveRepos.length > 0) {
+    console.log(`Live update mode: ${liveRepos.length} repos`);
+    liveRepos.forEach((repo) => console.log(`  - ${repo}`));
+  }
+  console.log();
+
   for (const repo of repos) {
-    await configureRepo(repo);
+    const dryRun = REPO_CONFIG[repo]?.dryRun ?? true;
+    await configureRepo(repo, dryRun);
   }
 
-  console.log(`\nConfiguration complete for all repositories!`);
+  console.log(`\nConfiguration complete for all repositories`);
 }
 
 main();
