@@ -87,6 +87,14 @@ async function getCurrentBranchProtection(owner, repoName, branch) {
   }
 }
 
+function formatJson(obj) {
+  return JSON.stringify(obj, null, 2).split("\n").join("\n      ");
+}
+
+function findItemsToRemove(existingItems, configuredItems) {
+  return existingItems.filter((item) => !configuredItems.includes(item));
+}
+
 function compareObjects(current, desired, path = "") {
   const changes = [];
   const allKeys = new Set([
@@ -120,7 +128,7 @@ function compareObjects(current, desired, path = "") {
   return changes;
 }
 
-async function removeBranchProtection(owner, repoName, branch, dryRun) {
+async function deleteBranchProtection(owner, repoName, branch, dryRun) {
   if (dryRun) {
     console.log(`  [DRY RUN] Would remove protection from branch: ${branch}`);
   } else {
@@ -154,10 +162,9 @@ async function configureRepo(repo, dryRun = true) {
     console.log("  DRY RUN MODE - No changes will be applied");
   }
 
-  const configPath = CONFIG_PATH;
-  console.log(`Loading config from: ${configPath}`);
+  console.log(`Loading config from: ${CONFIG_PATH}`);
 
-  const configContent = await fs.readFile(configPath, "utf8");
+  const configContent = await fs.readFile(CONFIG_PATH, "utf8");
   const config = JSON.parse(configContent);
   console.log(`Configuration loaded successfully\n`);
 
@@ -168,13 +175,19 @@ async function configureRepo(repo, dryRun = true) {
     ? Object.keys(config.branchProtection)
     : [];
 
-  console.log(`  Current protected branches in repo (${existingProtectedBranches.length}):`);
+  console.log(
+    `  Current protected branches in repo (${existingProtectedBranches.length}):`
+  );
   if (existingProtectedBranches.length > 0) {
     for (const branch of existingProtectedBranches) {
       console.log(`    - ${branch}`);
-      const protection = await getCurrentBranchProtection(owner, repoName, branch);
+      const protection = await getCurrentBranchProtection(
+        owner,
+        repoName,
+        branch
+      );
       if (protection) {
-        console.log(`      Protection settings: ${JSON.stringify(protection, null, 2).split('\n').join('\n      ')}`);
+        console.log(`      Protection settings: ${formatJson(protection)}`);
       }
     }
   } else {
@@ -187,7 +200,11 @@ async function configureRepo(repo, dryRun = true) {
       console.log(`  Protecting branch: ${branch}`);
 
       const mergedRules = mergeWithDefaults(rules);
-      const currentProtection = await getCurrentBranchProtection(owner, repoName, branch);
+      const currentProtection = await getCurrentBranchProtection(
+        owner,
+        repoName,
+        branch
+      );
 
       if (currentProtection) {
         const changes = compareObjects(currentProtection, mergedRules);
@@ -224,8 +241,10 @@ async function configureRepo(repo, dryRun = true) {
   } else {
     console.log("  No branch protection rules found in config");
   }
-  const branchesToRemove = existingProtectedBranches.filter(
-    (branch) => !configuredBranches.includes(branch)
+
+  const branchesToRemove = findItemsToRemove(
+    existingProtectedBranches,
+    configuredBranches
   );
 
   if (branchesToRemove.length > 0) {
@@ -235,16 +254,17 @@ async function configureRepo(repo, dryRun = true) {
     for (const branch of branchesToRemove) {
       // TODO: be careful that the config is correct before enabling this
       console.log(`  Would remove protection from branch: ${branch}`);
-      // await removeBranchProtection(owner, repoName, branch, dryRun);
+      // await deleteBranchProtection(owner, repoName, branch, dryRun);
     }
   }
   console.log();
 
   console.log("Configuring Environments\n");
 
-  const { environments: existingEnvironments, total_count } = await getEnvironments(owner, repoName);
+  const { environments: existingEnvironments, total_count } =
+    await getEnvironments(owner, repoName);
   const existingEnvironmentNames = existingEnvironments.map((e) => e.name);
-  const configuredEnvironments = config.environments
+  const configuredEnvironmentNames = config.environments
     ? config.environments.map((e) => e.environment_name)
     : [];
 
@@ -252,7 +272,7 @@ async function configureRepo(repo, dryRun = true) {
   if (existingEnvironments.length > 0) {
     for (const env of existingEnvironments) {
       console.log(`    - ${env.name}`);
-      console.log(`      Settings: ${JSON.stringify(env, null, 2).split('\n').join('\n      ')}`);
+      console.log(`      Settings: ${formatJson(env)}`);
     }
   } else {
     console.log(`    (none)`);
@@ -297,8 +317,10 @@ async function configureRepo(repo, dryRun = true) {
   } else {
     console.log("  No environments found in config");
   }
-  const environmentsToRemove = existingEnvironmentNames.filter(
-    (env) => !configuredEnvironments.includes(env)
+
+  const environmentsToRemove = findItemsToRemove(
+    existingEnvironmentNames,
+    configuredEnvironmentNames
   );
 
   if (environmentsToRemove.length > 0) {
