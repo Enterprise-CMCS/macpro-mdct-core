@@ -55,19 +55,32 @@ async function getEnvironments(owner, repoName) {
     owner,
     repo: repoName,
   });
-  return data.environments.map((e) => e.name);
+  return {
+    environments: data.environments,
+    total_count: data.total_count,
+  };
 }
 
+const branchProtectionCache = new Map();
+
 async function getCurrentBranchProtection(owner, repoName, branch) {
+  const cacheKey = `${owner}/${repoName}/${branch}`;
+
+  if (branchProtectionCache.has(cacheKey)) {
+    return branchProtectionCache.get(cacheKey);
+  }
+
   try {
     const { data } = await octokit.rest.repos.getBranchProtection({
       owner,
       repo: repoName,
       branch,
     });
+    branchProtectionCache.set(cacheKey, data);
     return data;
   } catch (error) {
     if (error.status === 404) {
+      branchProtectionCache.set(cacheKey, null);
       return null;
     }
     throw error;
@@ -138,7 +151,7 @@ async function configureRepo(repo, dryRun = true) {
 
   console.log(`\nConfiguring repository: ${repo}`);
   if (dryRun) {
-    console.log("  DRY RUN MODE - No changes will be applied\n");
+    console.log("  DRY RUN MODE - No changes will be applied");
   }
 
   const configPath = CONFIG_PATH;
@@ -155,17 +168,26 @@ async function configureRepo(repo, dryRun = true) {
     ? Object.keys(config.branchProtection)
     : [];
 
+  console.log(`  Current protected branches in repo (${existingProtectedBranches.length}):`);
+  if (existingProtectedBranches.length > 0) {
+    for (const branch of existingProtectedBranches) {
+      console.log(`    - ${branch}`);
+      const protection = await getCurrentBranchProtection(owner, repoName, branch);
+      if (protection) {
+        console.log(`      Protection settings: ${JSON.stringify(protection, null, 2).split('\n').join('\n      ')}`);
+      }
+    }
+  } else {
+    console.log(`    (none)`);
+  }
+  console.log();
+
   if (config.branchProtection && configuredBranches.length > 0) {
     for (const [branch, rules] of Object.entries(config.branchProtection)) {
       console.log(`  Protecting branch: ${branch}`);
 
       const mergedRules = mergeWithDefaults(rules);
-
-      const currentProtection = await getCurrentBranchProtection(
-        owner,
-        repoName,
-        branch
-      );
+      const currentProtection = await getCurrentBranchProtection(owner, repoName, branch);
 
       if (currentProtection) {
         const changes = compareObjects(currentProtection, mergedRules);
@@ -220,18 +242,28 @@ async function configureRepo(repo, dryRun = true) {
 
   console.log("Configuring Environments\n");
 
-  // Get currently configured environments
-  const existingEnvironments = await getEnvironments(owner, repoName);
+  const { environments: existingEnvironments, total_count } = await getEnvironments(owner, repoName);
+  const existingEnvironmentNames = existingEnvironments.map((e) => e.name);
   const configuredEnvironments = config.environments
     ? config.environments.map((e) => e.environment_name)
     : [];
 
-  // Configure/update environments from config
+  console.log(`  Current environments in repo (${total_count}):`);
+  if (existingEnvironments.length > 0) {
+    for (const env of existingEnvironments) {
+      console.log(`    - ${env.name}`);
+      console.log(`      Settings: ${JSON.stringify(env, null, 2).split('\n').join('\n      ')}`);
+    }
+  } else {
+    console.log(`    (none)`);
+  }
+  console.log();
+
   if (config.environments && config.environments.length > 0) {
     for (const env of config.environments) {
       console.log(`  Configuring environment: ${env.environment_name}`);
 
-      const isNew = !existingEnvironments.includes(env.environment_name);
+      const isNew = !existingEnvironmentNames.includes(env.environment_name);
       if (isNew) {
         console.log(`  Environment does not exist - will create`);
       } else {
@@ -240,7 +272,9 @@ async function configureRepo(repo, dryRun = true) {
 
       if (dryRun) {
         console.log(
-          `  [DRY RUN] Would ${isNew ? "create" : "update"} environment`
+          `  [DRY RUN] Would ${isNew ? "create" : "update"} environment ${
+            env.environment_name
+          }`
         );
       } else {
         await octokit.rest.repos.createOrUpdateEnvironment({
@@ -263,7 +297,7 @@ async function configureRepo(repo, dryRun = true) {
   } else {
     console.log("  No environments found in config");
   }
-  const environmentsToRemove = existingEnvironments.filter(
+  const environmentsToRemove = existingEnvironmentNames.filter(
     (env) => !configuredEnvironments.includes(env)
   );
 
