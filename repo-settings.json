@@ -28,11 +28,210 @@
       "block_creations": false,
       "lock_branch": false,
       "allow_fork_syncing": false
+    },
+    "main": {
+      "required_status_checks": {
+        "strict": false,
+        "contexts": [
+          "CodeQL",
+          "Analyze (javascript)",
+          "deploy",
+          "assignAuthor",
+          "qlty check",
+          "qlty coverage",
+          "qlty coverage diff",
+          "e2e-tests",
+          "prchecks"
+        ],
+        "checks": [
+          {
+            "context": "CodeQL",
+            "app_id": 57789
+          },
+          {
+            "context": "Analyze (javascript)",
+            "app_id": 15368
+          },
+          {
+            "context": "deploy",
+            "app_id": 15368
+          },
+          {
+            "context": "assignAuthor",
+            "app_id": 15368
+          },
+          {
+            "context": "qlty check",
+            "app_id": null
+          },
+          {
+            "context": "qlty coverage",
+            "app_id": null
+          },
+          {
+            "context": "qlty coverage diff",
+            "app_id": null
+          },
+          {
+            "context": "e2e-tests",
+            "app_id": 15368
+          },
+          {
+            "context": "prchecks",
+            "app_id": 15368
+          }
+        ]
+      },
+      "required_pull_request_reviews": {
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": false,
+        "require_last_push_approval": false,
+        "required_approving_review_count": 1,
+        "bypass_pull_request_allowances": {
+          "users": [
+            {
+              "login": "mdct-github-service-account"
+            }
+          ],
+          "teams": [],
+          "apps": []
+        }
+      },
+      "required_signatures": false,
+      "enforce_admins": false,
+      "required_linear_history": true,
+      "allow_force_pushes": false,
+      "allow_deletions": false,
+      "block_creations": false,
+      "required_conversation_resolution": true,
+      "lock_branch": false,
+      "allow_fork_syncing": false
+    },
+    "production": {
+      "required_status_checks": {
+        "strict": false,
+        "contexts": [
+          "CodeQL",
+          "Analyze (javascript)",
+          "deploy",
+          "assignAuthor",
+          "prchecks"
+        ],
+        "checks": [
+          {
+            "context": "CodeQL",
+            "app_id": 57789
+          },
+          {
+            "context": "Analyze (javascript)",
+            "app_id": 15368
+          },
+          {
+            "context": "deploy",
+            "app_id": 15368
+          },
+          {
+            "context": "assignAuthor",
+            "app_id": 15368
+          },
+          {
+            "context": "prchecks",
+            "app_id": 15368
+          }
+        ]
+      },
+      "required_pull_request_reviews": {
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": true,
+        "require_last_push_approval": false,
+        "required_approving_review_count": 1
+      },
+      "required_signatures": false,
+      "enforce_admins": false,
+      "required_linear_history": false,
+      "allow_force_pushes": false,
+      "allow_deletions": false,
+      "block_creations": false,
+      "required_conversation_resolution": true,
+      "lock_branch": false,
+      "allow_fork_syncing": false
+    },
+    "val": {
+      "required_status_checks": {
+        "strict": false,
+        "contexts": [
+          "Analyze (javascript)",
+          "deploy",
+          "CodeQL",
+          "assignAuthor",
+          "prchecks",
+          "e2e-tests"
+        ],
+        "checks": [
+          {
+            "context": "Analyze (javascript)",
+            "app_id": 15368
+          },
+          {
+            "context": "deploy",
+            "app_id": 15368
+          },
+          {
+            "context": "CodeQL",
+            "app_id": 57789
+          },
+          {
+            "context": "assignAuthor",
+            "app_id": 15368
+          },
+          {
+            "context": "prchecks",
+            "app_id": 15368
+          },
+          {
+            "context": "e2e-tests",
+            "app_id": 15368
+          }
+        ]
+      },
+      "required_pull_request_reviews": {
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": true,
+        "require_last_push_approval": false,
+        "required_approving_review_count": 1
+      },
+      "required_signatures": false,
+      "enforce_admins": false,
+      "required_linear_history": false,
+      "allow_force_pushes": false,
+      "allow_deletions": false,
+      "block_creations": false,
+      "required_conversation_resolution": true,
+      "lock_branch": false,
+      "allow_fork_syncing": false
     }
   },
   "environments": [
     {
       "environment_name": "jon"
+    },
+    {
+      "deployment_branch_policy": null,
+      "environment_name": "dev"
+    },
+    {
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "environment_name": "production"
+    },
+    {
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "environment_name": "val"
     }
   ]
 }
