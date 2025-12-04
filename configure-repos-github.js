@@ -12,6 +12,8 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_PATH = path.join(ROOT_DIR, "repo-settings.json");
 
+const SEPARATOR_WIDTH = 80;
+
 // TODO: configure all repos when ready
 const REPO_CONFIG = (await loadReposFromConfig(true))
   .filter((repo) => repo.includes("seds")) // TODO: temp
@@ -61,6 +63,22 @@ async function getEnvironments(owner, repoName) {
   };
 }
 
+async function getEnvironmentDetails(owner, repoName, environmentName) {
+  try {
+    const { data } = await octokit.rest.repos.getEnvironment({
+      owner,
+      repo: repoName,
+      environment_name: environmentName,
+    });
+    return data;
+  } catch (error) {
+    if (error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 const branchProtectionCache = new Map();
 
 async function getCurrentBranchProtection(owner, repoName, branch) {
@@ -87,12 +105,47 @@ async function getCurrentBranchProtection(owner, repoName, branch) {
   }
 }
 
-function formatJson(obj) {
-  return JSON.stringify(obj, null, 2).split("\n").join("\n      ");
+function removeMetadata(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+
+  const metadataKeys = new Set(['url', 'id', 'node_id', 'avatar_url', 'gravatar_id',
+    'type', 'site_admin', 'user_view_type']);
+  const metadataSuffixes = ['_url', '_at'];
+
+  for (const key in obj) {
+    if (metadataKeys.has(key) || metadataSuffixes.some(suffix => key.endsWith(suffix))) {
+      delete obj[key];
+    } else if (Array.isArray(obj[key])) {
+      obj[key].forEach(item => removeMetadata(item));
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      removeMetadata(obj[key]);
+    }
+  }
 }
 
-function findItemsToRemove(existingItems, configuredItems) {
-  return existingItems.filter((item) => !configuredItems.includes(item));
+function convertBranchProtectionToConfig(config) {
+  if (!config) return null;
+
+  removeMetadata(config);
+
+  for (const key in config) {
+    if (config[key]?.enabled !== undefined) {
+      config[key] = config[key].enabled;
+    }
+  }
+
+  return config;
+}
+
+function convertEnvironmentToConfig(config) {
+  config.environment_name = config.name;
+
+  removeMetadata(config);
+
+  const nonConfigKeys = ['name', 'can_admins_bypass', 'protection_rules'];
+  nonConfigKeys.forEach(key => delete config[key]);
+
+  return config;
 }
 
 function compareObjects(current, desired, path = "") {
@@ -154,149 +207,189 @@ async function deleteEnvironment(owner, repoName, environmentName, dryRun) {
   }
 }
 
+function logList(label, items, prefix) {
+  console.log(`${label}: ${items.length}`);
+  if (items.length > 0) {
+    items.forEach(item => console.log(`  ${prefix} ${item}`));
+  }
+}
+
 async function configureRepo(repo, dryRun = true) {
   const [owner, repoName] = repo.split("/");
 
-  console.log(`\nConfiguring repository: ${repo}`);
+  console.log(`\n${"=".repeat(SEPARATOR_WIDTH)}`);
+  console.log(`Repository: ${repo}`);
   if (dryRun) {
-    console.log("  DRY RUN MODE - No changes will be applied");
+    console.log("Mode: DRY RUN - No changes will be applied");
+  } else {
+    console.log("Mode: LIVE - Changes will be applied");
   }
-
-  console.log(`Loading config from: ${CONFIG_PATH}`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}\n`);
 
   const configContent = await fs.readFile(CONFIG_PATH, "utf8");
   const config = JSON.parse(configContent);
-  console.log(`Configuration loaded successfully\n`);
 
-  console.log("Configuring Branch Protection Rules\n");
+  const currentConfig = {
+    branchProtection: {},
+    environments: [],
+  };
+
+  console.log("BRANCH PROTECTION");
+  console.log("-".repeat(SEPARATOR_WIDTH));
 
   const existingProtectedBranches = await getProtectedBranches(owner, repoName);
   const configuredBranches = config.branchProtection
     ? Object.keys(config.branchProtection)
     : [];
 
-  console.log(
-    `  Current protected branches in repo (${existingProtectedBranches.length}):`
-  );
-  if (existingProtectedBranches.length > 0) {
-    for (const branch of existingProtectedBranches) {
-      console.log(`    - ${branch}`);
-      const protection = await getCurrentBranchProtection(
-        owner,
-        repoName,
-        branch
-      );
-      if (protection) {
-        console.log(`      Protection settings: ${formatJson(protection)}`);
-      }
+  for (const branch of existingProtectedBranches) {
+    const protection = await getCurrentBranchProtection(
+      owner,
+      repoName,
+      branch
+    );
+    if (protection) {
+      currentConfig.branchProtection[branch] =
+        convertBranchProtectionToConfig(protection);
     }
-  } else {
-    console.log(`    (none)`);
   }
+
+  logList("Current", existingProtectedBranches, "-");
+  logList("Desired", configuredBranches, "+");
   console.log();
 
-  if (config.branchProtection && configuredBranches.length > 0) {
-    for (const [branch, rules] of Object.entries(config.branchProtection)) {
-      console.log(`  Protecting branch: ${branch}`);
+  const existingSet = new Set(existingProtectedBranches);
+  const configuredSet = new Set(configuredBranches);
 
-      const mergedRules = mergeWithDefaults(rules);
+  const branchesToAdd = configuredBranches.filter(b => !existingSet.has(b));
+  const branchesToUpdate = configuredBranches.filter(b => existingSet.has(b));
+  const branchesToRemove = existingProtectedBranches.filter(b => !configuredSet.has(b));
+
+  if (branchesToAdd.length > 0) {
+    console.log(`Will add protection (${branchesToAdd.length}):`);
+    branchesToAdd.forEach((b) => console.log(`  + ${b}`));
+  }
+
+  if (branchesToUpdate.length > 0) {
+    console.log(`Will update protection (${branchesToUpdate.length}):`);
+    for (const branch of branchesToUpdate) {
+      const mergedRules = mergeWithDefaults(config.branchProtection[branch]);
       const currentProtection = await getCurrentBranchProtection(
         owner,
         repoName,
         branch
       );
+      const changes = compareObjects(currentProtection, mergedRules);
 
-      if (currentProtection) {
-        const changes = compareObjects(currentProtection, mergedRules);
-        if (changes.length > 0) {
-          console.log(`  Changes detected:`);
-          for (const change of changes) {
-            console.log(
-              `    ${change.field}: ${JSON.stringify(
-                change.from
-              )} -> ${JSON.stringify(change.to)}`
-            );
-          }
-        } else {
-          console.log(`  No changes needed`);
-        }
+      if (changes.length > 0) {
+        console.log(`  ~ ${branch} (${changes.length} changes)`);
+        changes.forEach((change) => {
+          console.log(
+            `      ${change.field}: ${JSON.stringify(
+              change.from
+            )} -> ${JSON.stringify(change.to)}`
+          );
+        });
       } else {
-        console.log(
-          `  Branch ${branch} is currently unprotected - will add protection`
-        );
+        console.log(`  = ${branch} (no changes)`);
       }
+    }
+  }
 
-      if (dryRun) {
-        console.log(`  [DRY RUN] Would update ${branch} branch protection`);
-      } else {
+  if (branchesToRemove.length > 0) {
+    console.log(`Will remove protection (${branchesToRemove.length}):`);
+    branchesToRemove.forEach((b) => console.log(`  - ${b}`));
+  }
+
+  // for (const branch of branchesToRemove) {
+  //   await deleteBranchProtection(owner, repoName, branch, dryRun);
+  // }
+
+  if (
+    branchesToAdd.length === 0 &&
+    branchesToUpdate.length === 0 &&
+    branchesToRemove.length === 0
+  ) {
+    console.log("No changes needed");
+  }
+  console.log();
+
+  if (configuredBranches.length > 0) {
+    for (const [branch, rules] of Object.entries(config.branchProtection)) {
+      const mergedRules = mergeWithDefaults(rules);
+
+      if (!dryRun) {
         await octokit.rest.repos.updateBranchProtection({
           owner,
           repo: repoName,
           branch,
           ...mergedRules,
         });
-        console.log(`  ${branch} branch protection updated`);
       }
     }
-  } else {
-    console.log("  No branch protection rules found in config");
   }
 
-  const branchesToRemove = findItemsToRemove(
-    existingProtectedBranches,
-    configuredBranches
-  );
-
-  if (branchesToRemove.length > 0) {
-    console.log(
-      `\n  Removing protection from branches not in config (${branchesToRemove.length}):`
-    );
-    for (const branch of branchesToRemove) {
-      // TODO: be careful that the config is correct before enabling this
-      console.log(`  Would remove protection from branch: ${branch}`);
-      // await deleteBranchProtection(owner, repoName, branch, dryRun);
-    }
-  }
   console.log();
 
-  console.log("Configuring Environments\n");
+  console.log("ENVIRONMENTS");
+  console.log("-".repeat(SEPARATOR_WIDTH));
 
-  const { environments: existingEnvironments, total_count } =
+  const { environments: existingEnvironments } =
     await getEnvironments(owner, repoName);
   const existingEnvironmentNames = existingEnvironments.map((e) => e.name);
   const configuredEnvironmentNames = config.environments
     ? config.environments.map((e) => e.environment_name)
     : [];
 
-  console.log(`  Current environments in repo (${total_count}):`);
-  if (existingEnvironments.length > 0) {
-    for (const env of existingEnvironments) {
-      console.log(`    - ${env.name}`);
-      console.log(`      Settings: ${formatJson(env)}`);
+  for (const env of existingEnvironments) {
+    const envDetails = await getEnvironmentDetails(owner, repoName, env.name);
+    if (envDetails) {
+      currentConfig.environments.push(convertEnvironmentToConfig(envDetails));
     }
-  } else {
-    console.log(`    (none)`);
+  }
+
+  logList("Current", existingEnvironmentNames, "-");
+  logList("Desired", configuredEnvironmentNames, "+");
+  console.log();
+
+  const existingEnvSet = new Set(existingEnvironmentNames);
+  const configuredEnvSet = new Set(configuredEnvironmentNames);
+
+  const environmentsToAdd = configuredEnvironmentNames.filter(e => !existingEnvSet.has(e));
+  const environmentsToUpdate = configuredEnvironmentNames.filter(e => existingEnvSet.has(e));
+  const environmentsToRemove = existingEnvironmentNames.filter(e => !configuredEnvSet.has(e));
+
+  if (environmentsToAdd.length > 0) {
+    console.log(`Will create (${environmentsToAdd.length}):`);
+    environmentsToAdd.forEach((e) => console.log(`  + ${e}`));
+  }
+
+  if (environmentsToUpdate.length > 0) {
+    console.log(`Will update (${environmentsToUpdate.length}):`);
+    environmentsToUpdate.forEach((e) => console.log(`  ~ ${e}`));
+  }
+
+  if (environmentsToRemove.length > 0) {
+    console.log(`Will delete (${environmentsToRemove.length}):`);
+    environmentsToRemove.forEach((e) => console.log(`  - ${e}`));
+  }
+
+  // for (const env of environmentsToRemove) {
+  //   await deleteEnvironment(owner, repoName, env, dryRun);
+  // }
+
+  if (
+    environmentsToAdd.length === 0 &&
+    environmentsToUpdate.length === 0 &&
+    environmentsToRemove.length === 0
+  ) {
+    console.log("No changes needed");
   }
   console.log();
 
-  if (config.environments && config.environments.length > 0) {
+  if (configuredEnvironmentNames.length > 0) {
     for (const env of config.environments) {
-      console.log(`  Configuring environment: ${env.environment_name}`);
-
-      const isNew = !existingEnvironmentNames.includes(env.environment_name);
-      if (isNew) {
-        console.log(`  Environment does not exist - will create`);
-      } else {
-        console.log(`  Environment exists - will update`);
-      }
-
-      if (dryRun) {
-        console.log(
-          `  [DRY RUN] Would ${isNew ? "create" : "update"} environment ${
-            env.environment_name
-          }`
-        );
-      } else {
+      if (!dryRun) {
         await octokit.rest.repos.createOrUpdateEnvironment({
           owner,
           repo: repoName,
@@ -306,66 +399,69 @@ async function configureRepo(repo, dryRun = true) {
           reviewers: env.reviewers,
           deployment_branch_policy: env.deployment_branch_policy,
         });
-
-        console.log(
-          `  Environment ${env.environment_name} ${
-            isNew ? "created" : "updated"
-          }`
-        );
       }
     }
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "-").replace("Z", "");
+  const outputDir = path.join(ROOT_DIR, "config-snapshots");
+  await fs.mkdir(outputDir, { recursive: true });
+
+  const outputFilename = `current-config-${repoName}-${timestamp}.json`;
+  const outputPath = path.join(outputDir, outputFilename);
+
+  await fs.writeFile(outputPath, JSON.stringify(currentConfig, null, 2));
+
+  console.log(`SUMMARY`);
+  console.log("-".repeat(SEPARATOR_WIDTH));
+  if (dryRun) {
+    console.log(`Dry run completed for ${repo}`);
   } else {
-    console.log("  No environments found in config");
+    console.log(`Changes applied for ${repo}`);
   }
-
-  const environmentsToRemove = findItemsToRemove(
-    existingEnvironmentNames,
-    configuredEnvironmentNames
-  );
-
-  if (environmentsToRemove.length > 0) {
-    console.log(
-      `\n  Removing environments not in config (${environmentsToRemove.length}):`
-    );
-    for (const env of environmentsToRemove) {
-      // TODO: be careful that the config is correct before enabling this
-      console.log(`  Would delete environment: ${env}`);
-      // await deleteEnvironment(owner, repoName, env, dryRun);
-    }
-  }
+  console.log(`Current config exported to: ${outputFilename}`);
   console.log();
 
-  if (dryRun) {
-    console.log(`[DRY RUN] Completed analysis for ${repo}`);
-  } else {
-    console.log(`All repository settings applied for ${repo}`);
-  }
+  return { repo, configPath: outputPath };
 }
 
 async function main() {
   const repos = Object.keys(REPO_CONFIG);
 
-  console.log(`Configuring ${repos.length} repositories...\n`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
+  console.log(`REPOSITORY CONFIGURATION`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
+  console.log(`Total repositories: ${repos.length}\n`);
 
   const dryRunRepos = repos.filter((repo) => REPO_CONFIG[repo].dryRun);
   const liveRepos = repos.filter((repo) => !REPO_CONFIG[repo].dryRun);
 
   if (dryRunRepos.length > 0) {
-    console.log(`Dry run mode: ${dryRunRepos.length} repos`);
+    console.log(`Dry run mode (${dryRunRepos.length}):`);
     dryRunRepos.forEach((repo) => console.log(`  - ${repo}`));
   }
   if (liveRepos.length > 0) {
-    console.log(`Live update mode: ${liveRepos.length} repos`);
+    console.log(`Live update mode (${liveRepos.length}):`);
     liveRepos.forEach((repo) => console.log(`  - ${repo}`));
   }
   console.log();
 
+  const results = [];
   for (const repo of repos) {
     const dryRun = REPO_CONFIG[repo]?.dryRun ?? true;
-    await configureRepo(repo, dryRun);
+    const result = await configureRepo(repo, dryRun);
+    results.push(result);
   }
 
-  console.log(`\nConfiguration complete for all repositories`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
+  console.log(`CONFIGURATION COMPLETE`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
+  console.log(`Processed ${repos.length} repositories`);
+  console.log(`\nCurrent config snapshots saved to: config-snapshots/`);
+  results.forEach((r) => {
+    console.log(`  - ${path.basename(r.configPath)}`);
+  });
+  console.log();
 }
 
 main();

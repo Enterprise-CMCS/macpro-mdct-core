@@ -35,3 +35,11 @@ jobs:
         run: node configure-repos-github.js
         env:
           GITHUB_TOKEN: ${{ steps.app-token-step.outputs.token }}
+
+      - name: Upload current config snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-snapshots-${{ github.run_number }}
+          path: config-snapshots/
+          retention-days: 90
