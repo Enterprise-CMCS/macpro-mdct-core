@@ -16,7 +16,7 @@ const SEPARATOR_WIDTH = 80;
 
 // TODO: configure all repos when ready
 const REPO_CONFIG = (await loadReposFromConfig(true))
-  .filter((repo) => repo.includes("seds") || repo.includes("carts")) // TODO: temp
+  // .filter((repo) => repo.includes("seds") || repo.includes("carts")) // TODO: temp
   .reduce((acc, repo) => {
     acc[repo] = { dryRun: true };
     return acc;
@@ -163,23 +163,23 @@ function arraysEqualIgnoringOrder(arr1, arr2) {
   if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
   if (arr1.length !== arr2.length) return false;
 
-  const stringify1 = arr1.map(item => JSON.stringify(item)).sort();
-  const stringify2 = arr2.map(item => JSON.stringify(item)).sort();
+  const stringify1 = arr1.map((item) => JSON.stringify(item)).sort();
+  const stringify2 = arr2.map((item) => JSON.stringify(item)).sort();
 
   return JSON.stringify(stringify1) === JSON.stringify(stringify2);
 }
 
 function findArrayDifferences(current, desired) {
-  const currentSet = new Set(current.map(item => JSON.stringify(item)));
-  const desiredSet = new Set(desired.map(item => JSON.stringify(item)));
+  const currentSet = new Set(current.map((item) => JSON.stringify(item)));
+  const desiredSet = new Set(desired.map((item) => JSON.stringify(item)));
 
   const added = desired
-    .filter(item => !currentSet.has(JSON.stringify(item)))
-    .map(item => JSON.parse(JSON.stringify(item)));
+    .filter((item) => !currentSet.has(JSON.stringify(item)))
+    .map((item) => JSON.parse(JSON.stringify(item)));
 
   const removed = current
-    .filter(item => !desiredSet.has(JSON.stringify(item)))
-    .map(item => JSON.parse(JSON.stringify(item)));
+    .filter((item) => !desiredSet.has(JSON.stringify(item)))
+    .map((item) => JSON.parse(JSON.stringify(item)));
 
   return { added, removed };
 }
@@ -335,17 +335,23 @@ async function configureRepo(repo, dryRun = true) {
             const parts = [];
             if (c.removed && c.removed.length > 0) {
               parts.push(
-                `removed: ${c.removed.map((item) => JSON.stringify(item)).join(", ")}`
+                `removed: ${c.removed
+                  .map((item) => JSON.stringify(item))
+                  .join(", ")}`
               );
             }
             if (c.added && c.added.length > 0) {
               parts.push(
-                `added: ${c.added.map((item) => JSON.stringify(item)).join(", ")}`
+                `added: ${c.added
+                  .map((item) => JSON.stringify(item))
+                  .join(", ")}`
               );
             }
             return `${c.field}: ${parts.join("; ")}`;
           } else {
-            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`;
+            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(
+              c.to
+            )}`;
           }
         });
         logList(
@@ -450,17 +456,23 @@ async function configureRepo(repo, dryRun = true) {
             const parts = [];
             if (c.removed && c.removed.length > 0) {
               parts.push(
-                `removed: ${c.removed.map((item) => JSON.stringify(item)).join(", ")}`
+                `removed: ${c.removed
+                  .map((item) => JSON.stringify(item))
+                  .join(", ")}`
               );
             }
             if (c.added && c.added.length > 0) {
               parts.push(
-                `added: ${c.added.map((item) => JSON.stringify(item)).join(", ")}`
+                `added: ${c.added
+                  .map((item) => JSON.stringify(item))
+                  .join(", ")}`
               );
             }
             return `${c.field}: ${parts.join("; ")}`;
           } else {
-            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`;
+            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(
+              c.to
+            )}`;
           }
         });
         logList(
