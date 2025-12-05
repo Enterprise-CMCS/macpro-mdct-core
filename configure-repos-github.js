@@ -16,9 +16,9 @@ const SEPARATOR_WIDTH = 80;
 
 // TODO: configure all repos when ready
 const REPO_CONFIG = (await loadReposFromConfig(true))
-  // .filter((repo) => repo.includes("seds") || repo.includes("carts")) // TODO: temp
+  .filter((repo) => repo.includes("carts")) // TODO: temp
   .reduce((acc, repo) => {
-    acc[repo] = { dryRun: true };
+    acc[repo] = { dryRun: false };
     return acc;
   }, {});
 
@@ -392,9 +392,9 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will remove protection", branchesToRemove, "-");
   }
 
-  // for (const branch of branchesToRemove) {
-  //   await deleteBranchProtection(owner, repoName, branch, dryRun);
-  // }
+  for (const branch of branchesToRemove) {
+    await deleteBranchProtection(owner, repoName, branch, dryRun);
+  }
 
   if (
     branchesToAdd.length === 0 &&
@@ -526,9 +526,9 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will delete", environmentsToRemove, "-");
   }
 
-  // for (const env of environmentsToRemove) {
-  //   await deleteEnvironment(owner, repoName, env, dryRun);
-  // }
+  for (const env of environmentsToRemove) {
+    await deleteEnvironment(owner, repoName, env, dryRun);
+  }
 
   if (
     environmentsToAdd.length === 0 &&
