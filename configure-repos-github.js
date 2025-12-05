@@ -149,6 +149,11 @@ function convertBranchProtectionToConfig(config) {
     delete config.required_status_checks.contexts;
   }
 
+  const allowances = config.required_pull_request_reviews?.bypass_pull_request_allowances;
+  if (allowances?.users) {
+    allowances.users = allowances.users.map(u => u.login ?? u);
+  }
+
   return config;
 }
 
