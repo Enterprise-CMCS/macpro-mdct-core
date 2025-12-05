@@ -224,11 +224,21 @@ function compareObjects(current, desired, path = "") {
         });
       }
     } else if (JSON.stringify(currentVal) !== JSON.stringify(desiredVal)) {
-      changes.push({
+      const change = {
         field: fullPath,
         from: currentVal,
         to: desiredVal,
-      });
+        added: [],
+        removed: [],
+      };
+
+      if (currentVal === null && desiredVal !== null) {
+        change.added = [desiredVal];
+      } else if (currentVal !== null && desiredVal === null) {
+        change.removed = [currentVal];
+      }
+
+      changes.push(change);
     }
   }
 
@@ -350,16 +360,16 @@ async function configureRepo(repo, dryRun = true) {
 
       if (changes.length > 0) {
         const changeStrings = changes.flatMap((c) => {
-          if (c.added !== undefined || c.removed !== undefined) {
+          if (c.added.length > 0 || c.removed.length > 0) {
             const lines = [];
-            if (c.removed && c.removed.length > 0) {
+            if (c.removed.length > 0) {
               lines.push(
                 `${c.field} removed:\n      ${c.removed
                   .map((item) => JSON.stringify(item))
                   .join("\n      ")}`
               );
             }
-            if (c.added && c.added.length > 0) {
+            if (c.added.length > 0) {
               lines.push(
                 `${c.field} added:\n      ${c.added
                   .map((item) => JSON.stringify(item))
@@ -478,16 +488,16 @@ async function configureRepo(repo, dryRun = true) {
 
       if (changes.length > 0) {
         const changeStrings = changes.flatMap((c) => {
-          if (c.added !== undefined || c.removed !== undefined) {
+          if (c.added.length > 0 || c.removed.length > 0) {
             const lines = [];
-            if (c.removed && c.removed.length > 0) {
+            if (c.removed.length > 0) {
               lines.push(
                 `${c.field} removed:\n      ${c.removed
                   .map((item) => JSON.stringify(item))
                   .join("\n      ")}`
               );
             }
-            if (c.added && c.added.length > 0) {
+            if (c.added.length > 0) {
               lines.push(
                 `${c.field} added:\n      ${c.added
                   .map((item) => JSON.stringify(item))
