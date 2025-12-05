@@ -145,6 +145,10 @@ function convertBranchProtectionToConfig(config) {
     }
   }
 
+  if ("contexts" in (config.required_status_checks ?? {})) {
+    delete config.required_status_checks.contexts;
+  }
+
   return config;
 }
 
