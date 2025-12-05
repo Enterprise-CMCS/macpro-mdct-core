@@ -16,7 +16,7 @@ const SEPARATOR_WIDTH = 80;
 
 // TODO: configure all repos when ready
 const REPO_CONFIG = (await loadReposFromConfig(true))
-  .filter((repo) => repo.includes("seds")) // TODO: temp
+  .filter((repo) => repo.includes("seds") || repo.includes("carts")) // TODO: temp
   .reduce((acc, repo) => {
     acc[repo] = { dryRun: true };
     return acc;
@@ -106,18 +106,29 @@ async function getCurrentBranchProtection(owner, repoName, branch) {
 }
 
 function removeMetadata(obj) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return;
 
-  const metadataKeys = new Set(['url', 'id', 'node_id', 'avatar_url', 'gravatar_id',
-    'type', 'site_admin', 'user_view_type']);
-  const metadataSuffixes = ['_url', '_at'];
+  const metadataKeys = new Set([
+    "url",
+    "id",
+    "node_id",
+    "avatar_url",
+    "gravatar_id",
+    "type",
+    "site_admin",
+    "user_view_type",
+  ]);
+  const metadataSuffixes = ["_url", "_at"];
 
   for (const key in obj) {
-    if (metadataKeys.has(key) || metadataSuffixes.some(suffix => key.endsWith(suffix))) {
+    if (
+      metadataKeys.has(key) ||
+      metadataSuffixes.some((suffix) => key.endsWith(suffix))
+    ) {
       delete obj[key];
     } else if (Array.isArray(obj[key])) {
-      obj[key].forEach(item => removeMetadata(item));
-    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      obj[key].forEach((item) => removeMetadata(item));
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
       removeMetadata(obj[key]);
     }
   }
@@ -142,8 +153,8 @@ function convertEnvironmentToConfig(config) {
 
   removeMetadata(config);
 
-  const nonConfigKeys = ['name', 'can_admins_bypass', 'protection_rules'];
-  nonConfigKeys.forEach(key => delete config[key]);
+  const nonConfigKeys = ["name", "can_admins_bypass", "protection_rules"];
+  nonConfigKeys.forEach((key) => delete config[key]);
 
   return config;
 }
@@ -210,7 +221,7 @@ async function deleteEnvironment(owner, repoName, environmentName, dryRun) {
 function logList(label, items, prefix) {
   console.log(`${label}: ${items.length}`);
   if (items.length > 0) {
-    items.forEach(item => console.log(`  ${prefix} ${item}`));
+    items.forEach((item) => console.log(`  ${prefix} ${item}`));
   }
 }
 
@@ -261,9 +272,11 @@ async function configureRepo(repo, dryRun = true) {
   const existingSet = new Set(existingProtectedBranches);
   const configuredSet = new Set(configuredBranches);
 
-  const branchesToAdd = configuredBranches.filter(b => !existingSet.has(b));
-  const branchesToUpdate = configuredBranches.filter(b => existingSet.has(b));
-  const branchesToRemove = existingProtectedBranches.filter(b => !configuredSet.has(b));
+  const branchesToAdd = configuredBranches.filter((b) => !existingSet.has(b));
+  const branchesToUpdate = configuredBranches.filter((b) => existingSet.has(b));
+  const branchesToRemove = existingProtectedBranches.filter(
+    (b) => !configuredSet.has(b)
+  );
 
   if (branchesToAdd.length > 0) {
     logList("Will add protection", branchesToAdd, "+");
@@ -281,10 +294,15 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentProtection, mergedRules);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map(c =>
-          `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
+        const changeStrings = changes.map(
+          (c) =>
+            `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
         );
-        logList(`  ~ ${branch} (${changes.length} changes)`, changeStrings, " ");
+        logList(
+          `  ~ ${branch} (${changes.length} changes)`,
+          changeStrings,
+          " "
+        );
       } else {
         console.log(`  = ${branch} (no changes)`);
       }
@@ -328,8 +346,10 @@ async function configureRepo(repo, dryRun = true) {
   console.log("ENVIRONMENTS");
   console.log("-".repeat(SEPARATOR_WIDTH));
 
-  const { environments: existingEnvironments } =
-    await getEnvironments(owner, repoName);
+  const { environments: existingEnvironments } = await getEnvironments(
+    owner,
+    repoName
+  );
   const existingEnvironmentNames = existingEnvironments.map((e) => e.name);
   const configuredEnvironmentNames = config.environments
     ? config.environments.map((e) => e.environment_name)
@@ -349,9 +369,15 @@ async function configureRepo(repo, dryRun = true) {
   const existingEnvSet = new Set(existingEnvironmentNames);
   const configuredEnvSet = new Set(configuredEnvironmentNames);
 
-  const environmentsToAdd = configuredEnvironmentNames.filter(e => !existingEnvSet.has(e));
-  const environmentsToUpdate = configuredEnvironmentNames.filter(e => existingEnvSet.has(e));
-  const environmentsToRemove = existingEnvironmentNames.filter(e => !configuredEnvSet.has(e));
+  const environmentsToAdd = configuredEnvironmentNames.filter(
+    (e) => !existingEnvSet.has(e)
+  );
+  const environmentsToUpdate = configuredEnvironmentNames.filter((e) =>
+    existingEnvSet.has(e)
+  );
+  const environmentsToRemove = existingEnvironmentNames.filter(
+    (e) => !configuredEnvSet.has(e)
+  );
 
   if (environmentsToAdd.length > 0) {
     logList("Will create", environmentsToAdd, "+");
@@ -360,15 +386,24 @@ async function configureRepo(repo, dryRun = true) {
   if (environmentsToUpdate.length > 0) {
     console.log(`Will update (${environmentsToUpdate.length}):`);
     for (const envName of environmentsToUpdate) {
-      const currentEnv = currentConfig.environments.find(e => e.environment_name === envName);
-      const desiredEnv = config.environments.find(e => e.environment_name === envName);
+      const currentEnv = currentConfig.environments.find(
+        (e) => e.environment_name === envName
+      );
+      const desiredEnv = config.environments.find(
+        (e) => e.environment_name === envName
+      );
       const changes = compareObjects(currentEnv, desiredEnv);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map(c =>
-          `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
+        const changeStrings = changes.map(
+          (c) =>
+            `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
         );
-        logList(`  ~ ${envName} (${changes.length} changes)`, changeStrings, " ");
+        logList(
+          `  ~ ${envName} (${changes.length} changes)`,
+          changeStrings,
+          " "
+        );
       } else {
         console.log(`  = ${envName} (no changes)`);
       }
@@ -408,7 +443,11 @@ async function configureRepo(repo, dryRun = true) {
     }
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "-").replace("Z", "");
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[:.]/g, "-")
+    .replace("T", "-")
+    .replace("Z", "");
   const outputDir = path.join(ROOT_DIR, "config-snapshots");
   await fs.mkdir(outputDir, { recursive: true });
 
@@ -460,9 +499,13 @@ async function main() {
   console.log(`CONFIGURATION COMPLETE`);
   console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
   console.log(`Processed ${repos.length} repositories`);
-  const snapshotFiles = results.map(r => path.basename(r.configPath));
+  const snapshotFiles = results.map((r) => path.basename(r.configPath));
   console.log();
-  logList("Current config snapshots saved to: config-snapshots/", snapshotFiles, "-");
+  logList(
+    "Current config snapshots saved to: config-snapshots/",
+    snapshotFiles,
+    "-"
+  );
   console.log();
 }
 
