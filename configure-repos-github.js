@@ -281,14 +281,10 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentProtection, mergedRules);
 
       if (changes.length > 0) {
-        console.log(`  ~ ${branch} (${changes.length} changes)`);
-        changes.forEach((change) => {
-          console.log(
-            `      ${change.field}: ${JSON.stringify(
-              change.from
-            )} -> ${JSON.stringify(change.to)}`
-          );
-        });
+        const changeStrings = changes.map(c =>
+          `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
+        );
+        logList(`  ~ ${branch} (${changes.length} changes)`, changeStrings, " ");
       } else {
         console.log(`  = ${branch} (no changes)`);
       }
@@ -369,14 +365,10 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentEnv, desiredEnv);
 
       if (changes.length > 0) {
-        console.log(`  ~ ${envName} (${changes.length} changes)`);
-        changes.forEach((change) => {
-          console.log(
-            `      ${change.field}: ${JSON.stringify(
-              change.from
-            )} -> ${JSON.stringify(change.to)}`
-          );
-        });
+        const changeStrings = changes.map(c =>
+          `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
+        );
+        logList(`  ~ ${envName} (${changes.length} changes)`, changeStrings, " ");
       } else {
         console.log(`  = ${envName} (no changes)`);
       }
@@ -468,10 +460,9 @@ async function main() {
   console.log(`CONFIGURATION COMPLETE`);
   console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
   console.log(`Processed ${repos.length} repositories`);
-  console.log(`\nCurrent config snapshots saved to: config-snapshots/`);
-  results.forEach((r) => {
-    console.log(`  - ${path.basename(r.configPath)}`);
-  });
+  const snapshotFiles = results.map(r => path.basename(r.configPath));
+  console.log();
+  logList("Current config snapshots saved to: config-snapshots/", snapshotFiles, "-");
   console.log();
 }
 
