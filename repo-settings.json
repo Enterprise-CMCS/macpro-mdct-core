@@ -201,5 +201,28 @@
       },
       "environment_name": "val"
     }
-  ]
+  ],
+  "overrides": {
+    "macpro-mdct-carts": {
+      "branchProtection": {
+        "skipci-archive-carts-v2": {
+          "required_pull_request_reviews": {
+            "dismiss_stale_reviews": false,
+            "require_code_owner_reviews": false,
+            "require_last_push_approval": false,
+            "required_approving_review_count": 1
+          },
+          "required_signatures": false,
+          "enforce_admins": false,
+          "required_linear_history": true,
+          "allow_force_pushes": false,
+          "allow_deletions": false,
+          "block_creations": false,
+          "required_conversation_resolution": false,
+          "lock_branch": true,
+          "allow_fork_syncing": false
+        }
+      }
+    }
+  }
 }
