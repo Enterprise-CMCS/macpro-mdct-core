@@ -274,7 +274,17 @@ async function configureRepo(repo, dryRun = true) {
   console.log(`${"=".repeat(SEPARATOR_WIDTH)}\n`);
 
   const configContent = await fs.readFile(CONFIG_PATH, "utf8");
-  const config = JSON.parse(configContent);
+  const baseConfig = JSON.parse(configContent);
+  const config = {
+    branchProtection: {
+      ...baseConfig.branchProtection,
+      ...baseConfig.overrides?.[repoName]?.branchProtection,
+    },
+    environments: [
+      ...baseConfig.environments,
+      ...(baseConfig.overrides?.[repoName]?.environments || []),
+    ],
+  };
 
   const currentConfig = {
     branchProtection: {},
