@@ -398,9 +398,9 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will remove protection", branchesToRemove, "-");
   }
 
-  // for (const branch of branchesToRemove) {
-  //   await deleteBranchProtection(owner, repoName, branch, dryRun);
-  // }
+  for (const branch of branchesToRemove) {
+    await deleteBranchProtection(owner, repoName, branch, dryRun);
+  }
 
   if (
     branchesToAdd.length === 0 &&
@@ -526,9 +526,9 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will delete", environmentsToRemove, "-");
   }
 
-  // for (const env of environmentsToRemove) {
-  //   await deleteEnvironment(owner, repoName, env, dryRun);
-  // }
+  for (const env of environmentsToRemove) {
+    await deleteEnvironment(owner, repoName, env, dryRun);
+  }
 
   if (
     environmentsToAdd.length === 0 &&
