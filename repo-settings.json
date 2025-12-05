@@ -22,15 +22,15 @@
           },
           {
             "context": "qlty check",
-            "app_id": null
+            "app_id": 890766
           },
           {
             "context": "qlty coverage",
-            "app_id": null
+            "app_id": 890766
           },
           {
             "context": "qlty coverage diff",
-            "app_id": null
+            "app_id": 890766
           },
           {
             "context": "e2e-tests",
