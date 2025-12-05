@@ -18,7 +18,7 @@ const SEPARATOR_WIDTH = 80;
 const REPO_CONFIG = (await loadReposFromConfig(true))
   .filter((repo) => repo.includes("carts")) // TODO: temp
   .reduce((acc, repo) => {
-    acc[repo] = { dryRun: false };
+    acc[repo] = { dryRun: true };
     return acc;
   }, {});
 
@@ -392,9 +392,9 @@ async function configureRepo(repo, dryRun = true) {
     }
   }
 
-  // if (branchesToRemove.length > 0) {
-  //   logList("Will remove protection", branchesToRemove, "-");
-  // }
+  if (branchesToRemove.length > 0) {
+    logList("Will remove protection", branchesToRemove, "-");
+  }
 
   // for (const branch of branchesToRemove) {
   //   await deleteBranchProtection(owner, repoName, branch, dryRun);
@@ -526,9 +526,9 @@ async function configureRepo(repo, dryRun = true) {
     }
   }
 
-  // if (environmentsToRemove.length > 0) {
-  //   logList("Will delete", environmentsToRemove, "-");
-  // }
+  if (environmentsToRemove.length > 0) {
+    logList("Will delete", environmentsToRemove, "-");
+  }
 
   // for (const env of environmentsToRemove) {
   //   await deleteEnvironment(owner, repoName, env, dryRun);
