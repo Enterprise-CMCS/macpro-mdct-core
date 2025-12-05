@@ -156,8 +156,8 @@ function compareObjects(current, desired, path = "") {
   ]);
 
   for (const key of allKeys) {
-    const currentVal = current?.[key];
-    const desiredVal = desired?.[key];
+    const currentVal = current?.[key] ?? null;
+    const desiredVal = desired?.[key] ?? null;
     const fullPath = path ? `${path}.${key}` : key;
 
     if (
@@ -366,7 +366,24 @@ async function configureRepo(repo, dryRun = true) {
 
   if (environmentsToUpdate.length > 0) {
     console.log(`Will update (${environmentsToUpdate.length}):`);
-    environmentsToUpdate.forEach((e) => console.log(`  ~ ${e}`));
+    for (const envName of environmentsToUpdate) {
+      const currentEnv = currentConfig.environments.find(e => e.environment_name === envName);
+      const desiredEnv = config.environments.find(e => e.environment_name === envName);
+      const changes = compareObjects(currentEnv, desiredEnv);
+
+      if (changes.length > 0) {
+        console.log(`  ~ ${envName} (${changes.length} changes)`);
+        changes.forEach((change) => {
+          console.log(
+            `      ${change.field}: ${JSON.stringify(
+              change.from
+            )} -> ${JSON.stringify(change.to)}`
+          );
+        });
+      } else {
+        console.log(`  = ${envName} (no changes)`);
+      }
+    }
   }
 
   if (environmentsToRemove.length > 0) {
