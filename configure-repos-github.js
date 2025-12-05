@@ -265,8 +265,8 @@ async function deleteEnvironment(owner, repoName, environmentName, dryRun) {
 }
 
 function logList(label, items, prefix) {
-  console.log(`${label}: ${items.length}`);
   if (items.length > 0) {
+    console.log(`${label}: ${items.length}`);
     items.forEach((item) => console.log(`  ${prefix} ${item}`));
   }
 }
@@ -281,7 +281,7 @@ async function configureRepo(repo, dryRun = true) {
   } else {
     console.log("Mode: LIVE - Changes will be applied");
   }
-  console.log(`${"=".repeat(SEPARATOR_WIDTH)}\n`);
+  console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
 
   const configContent = await fs.readFile(CONFIG_PATH, "utf8");
   const baseConfig = JSON.parse(configContent);
@@ -385,11 +385,7 @@ async function configureRepo(repo, dryRun = true) {
     if (branchesWithChanges.length > 0) {
       console.log(`Will update protection (${branchesWithChanges.length}):`);
       for (const { branch, changeStrings } of branchesWithChanges) {
-        logList(
-          `  ~ ${branch} (${changeStrings.length} changes)`,
-          changeStrings,
-          " "
-        );
+        logList(`  ~ ${branch} changes`, changeStrings, " ");
       }
     }
 
@@ -517,11 +513,7 @@ async function configureRepo(repo, dryRun = true) {
     if (envsWithChanges.length > 0) {
       console.log(`Will update (${envsWithChanges.length}):`);
       for (const { envName, changeStrings } of envsWithChanges) {
-        logList(
-          `  ~ ${envName} (${changeStrings.length} changes)`,
-          changeStrings,
-          " "
-        );
+        logList(`  ~ ${envName} changes`, changeStrings, " ");
       }
     }
 
@@ -614,6 +606,7 @@ async function main() {
     results.push(result);
   }
 
+  console.log();
   console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
   console.log(`CONFIGURATION COMPLETE`);
   console.log(`${"=".repeat(SEPARATOR_WIDTH)}`);
