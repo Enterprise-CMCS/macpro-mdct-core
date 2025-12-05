@@ -352,24 +352,24 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentProtection, mergedRules);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map((c) => {
+        const changeStrings = changes.flatMap((c) => {
           if (c.added !== undefined || c.removed !== undefined) {
-            const parts = [];
+            const lines = [];
             if (c.removed && c.removed.length > 0) {
-              parts.push(
-                `removed: ${c.removed
+              lines.push(
+                `${c.field} removed:\n      ${c.removed
                   .map((item) => JSON.stringify(item))
-                  .join(", ")}`
+                  .join("\n      ")}`
               );
             }
             if (c.added && c.added.length > 0) {
-              parts.push(
-                `added: ${c.added
+              lines.push(
+                `${c.field} added:\n      ${c.added
                   .map((item) => JSON.stringify(item))
-                  .join(", ")}`
+                  .join("\n      ")}`
               );
             }
-            return `${c.field}: ${parts.join("; ")}`;
+            return lines;
           } else {
             return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(
               c.to
@@ -430,8 +430,6 @@ async function configureRepo(repo, dryRun = true) {
     }
   }
 
-  console.log();
-
   console.log("ENVIRONMENTS");
   console.log("-".repeat(SEPARATOR_WIDTH));
 
@@ -486,24 +484,24 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentEnv, desiredEnv);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map((c) => {
+        const changeStrings = changes.flatMap((c) => {
           if (c.added !== undefined || c.removed !== undefined) {
-            const parts = [];
+            const lines = [];
             if (c.removed && c.removed.length > 0) {
-              parts.push(
-                `removed: ${c.removed
+              lines.push(
+                `${c.field} removed:\n      ${c.removed
                   .map((item) => JSON.stringify(item))
-                  .join(", ")}`
+                  .join("\n      ")}`
               );
             }
             if (c.added && c.added.length > 0) {
-              parts.push(
-                `added: ${c.added
+              lines.push(
+                `${c.field} added:\n      ${c.added
                   .map((item) => JSON.stringify(item))
-                  .join(", ")}`
+                  .join("\n      ")}`
               );
             }
-            return `${c.field}: ${parts.join("; ")}`;
+            return lines;
           } else {
             return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(
               c.to
@@ -586,7 +584,6 @@ async function configureRepo(repo, dryRun = true) {
     console.log(`Changes applied for ${repo}`);
   }
   console.log(`Current config exported to: ${outputFilename}`);
-  console.log();
 
   return { repo, configPath: outputPath };
 }
