@@ -319,7 +319,9 @@ async function configureRepo(repo, dryRun = true) {
   }
 
   if (branchesToUpdate.length > 0) {
-    console.log(`Will update protection (${branchesToUpdate.length}):`);
+    const branchesWithChanges = [];
+    const branchesWithoutChanges = [];
+
     for (const branch of branchesToUpdate) {
       const mergedRules = mergeWithDefaults(config.branchProtection[branch]);
       const currentProtection = await getCurrentBranchProtection(
@@ -354,14 +356,25 @@ async function configureRepo(repo, dryRun = true) {
             )}`;
           }
         });
+        branchesWithChanges.push({ branch, changeStrings });
+      } else {
+        branchesWithoutChanges.push(branch);
+      }
+    }
+
+    if (branchesWithChanges.length > 0) {
+      console.log(`Will update protection (${branchesWithChanges.length}):`);
+      for (const { branch, changeStrings } of branchesWithChanges) {
         logList(
-          `  ~ ${branch} (${changes.length} changes)`,
+          `  ~ ${branch} (${changeStrings.length} changes)`,
           changeStrings,
           " "
         );
-      } else {
-        console.log(`  = ${branch} (no changes)`);
       }
+    }
+
+    if (branchesWithoutChanges.length > 0) {
+      logList("Already up to date", branchesWithoutChanges, "=");
     }
   }
 
@@ -440,7 +453,9 @@ async function configureRepo(repo, dryRun = true) {
   }
 
   if (environmentsToUpdate.length > 0) {
-    console.log(`Will update (${environmentsToUpdate.length}):`);
+    const envsWithChanges = [];
+    const envsWithoutChanges = [];
+
     for (const envName of environmentsToUpdate) {
       const currentEnv = currentConfig.environments.find(
         (e) => e.environment_name === envName
@@ -475,14 +490,25 @@ async function configureRepo(repo, dryRun = true) {
             )}`;
           }
         });
+        envsWithChanges.push({ envName, changeStrings });
+      } else {
+        envsWithoutChanges.push(envName);
+      }
+    }
+
+    if (envsWithChanges.length > 0) {
+      console.log(`Will update (${envsWithChanges.length}):`);
+      for (const { envName, changeStrings } of envsWithChanges) {
         logList(
-          `  ~ ${envName} (${changes.length} changes)`,
+          `  ~ ${envName} (${changeStrings.length} changes)`,
           changeStrings,
           " "
         );
-      } else {
-        console.log(`  = ${envName} (no changes)`);
       }
+    }
+
+    if (envsWithoutChanges.length > 0) {
+      logList("Already up to date", envsWithoutChanges, "=");
     }
   }
 
