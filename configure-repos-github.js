@@ -16,9 +16,9 @@ const SEPARATOR_WIDTH = 80;
 
 // TODO: configure all repos when ready
 const REPO_CONFIG = (await loadReposFromConfig(true))
-  .filter((repo) => repo.includes("carts")) // TODO: temp
+  .filter((repo) => repo.includes("seds") || repo.includes("carts")) // TODO: temp
   .reduce((acc, repo) => {
-    acc[repo] = { dryRun: false };
+    acc[repo] = { dryRun: true };
     return acc;
   }, {});
 
