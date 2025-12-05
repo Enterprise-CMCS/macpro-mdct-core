@@ -237,7 +237,12 @@
               }
             ]
           },
-          "required_pull_request_reviews": null,
+          "required_pull_request_reviews": {
+            "dismiss_stale_reviews": true,
+            "require_code_owner_reviews": false,
+            "require_last_push_approval": false,
+            "required_approving_review_count": 1
+          },
           "required_signatures": false,
           "enforce_admins": false,
           "required_linear_history": true,
@@ -271,10 +276,6 @@
               {
                 "context": "prchecks",
                 "app_id": 15368
-              },
-              {
-                "context": "e2e-tests",
-                "app_id": 15368
               }
             ]
           },
@@ -297,6 +298,7 @@
           "required_status_checks": {
             "strict": false,
             "checks": [
+              { "context": "Analyze (javascript)", "app_id": 15368 },
               {
                 "context": "CodeQL",
                 "app_id": 57789
@@ -352,22 +354,6 @@
               },
               {
                 "context": "e2e-tests",
-                "app_id": 15368
-              },
-              {
-                "context": "Analyze (javascript)",
-                "app_id": 15368
-              },
-              {
-                "context": "CodeQL",
-                "app_id": 57789
-              },
-              {
-                "context": "assignAuthor",
-                "app_id": 15368
-              },
-              {
-                "context": "prchecks",
                 "app_id": 15368
               }
             ]
