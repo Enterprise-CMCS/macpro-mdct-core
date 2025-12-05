@@ -3,6 +3,17 @@
     "jon": {
       "required_status_checks": {
         "strict": false,
+        "contexts": [
+          "CodeQL",
+          "Analyze (javascript)",
+          "deploy",
+          "assignAuthor",
+          "qlty check",
+          "qlty coverage",
+          "qlty coverage diff",
+          "e2e-tests",
+          "prchecks"
+        ],
         "checks": [
           {
             "context": "CodeQL",
