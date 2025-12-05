@@ -597,7 +597,6 @@ async function main() {
   if (liveRepos.length > 0) {
     logList("Live update mode", liveRepos, "-");
   }
-  console.log();
 
   const results = [];
   for (const repo of repos) {
