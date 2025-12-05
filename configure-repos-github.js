@@ -266,8 +266,7 @@ async function configureRepo(repo, dryRun = true) {
   const branchesToRemove = existingProtectedBranches.filter(b => !configuredSet.has(b));
 
   if (branchesToAdd.length > 0) {
-    console.log(`Will add protection (${branchesToAdd.length}):`);
-    branchesToAdd.forEach((b) => console.log(`  + ${b}`));
+    logList("Will add protection", branchesToAdd, "+");
   }
 
   if (branchesToUpdate.length > 0) {
@@ -297,8 +296,7 @@ async function configureRepo(repo, dryRun = true) {
   }
 
   if (branchesToRemove.length > 0) {
-    console.log(`Will remove protection (${branchesToRemove.length}):`);
-    branchesToRemove.forEach((b) => console.log(`  - ${b}`));
+    logList("Will remove protection", branchesToRemove, "-");
   }
 
   // for (const branch of branchesToRemove) {
@@ -360,8 +358,7 @@ async function configureRepo(repo, dryRun = true) {
   const environmentsToRemove = existingEnvironmentNames.filter(e => !configuredEnvSet.has(e));
 
   if (environmentsToAdd.length > 0) {
-    console.log(`Will create (${environmentsToAdd.length}):`);
-    environmentsToAdd.forEach((e) => console.log(`  + ${e}`));
+    logList("Will create", environmentsToAdd, "+");
   }
 
   if (environmentsToUpdate.length > 0) {
@@ -387,8 +384,7 @@ async function configureRepo(repo, dryRun = true) {
   }
 
   if (environmentsToRemove.length > 0) {
-    console.log(`Will delete (${environmentsToRemove.length}):`);
-    environmentsToRemove.forEach((e) => console.log(`  - ${e}`));
+    logList("Will delete", environmentsToRemove, "-");
   }
 
   // for (const env of environmentsToRemove) {
@@ -454,12 +450,10 @@ async function main() {
   const liveRepos = repos.filter((repo) => !REPO_CONFIG[repo].dryRun);
 
   if (dryRunRepos.length > 0) {
-    console.log(`Dry run mode (${dryRunRepos.length}):`);
-    dryRunRepos.forEach((repo) => console.log(`  - ${repo}`));
+    logList("Dry run mode", dryRunRepos, "-");
   }
   if (liveRepos.length > 0) {
-    console.log(`Live update mode (${liveRepos.length}):`);
-    liveRepos.forEach((repo) => console.log(`  - ${repo}`));
+    logList("Live update mode", liveRepos, "-");
   }
   console.log();
 
