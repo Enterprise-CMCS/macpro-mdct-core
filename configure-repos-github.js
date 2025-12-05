@@ -17,7 +17,7 @@ const SEPARATOR_WIDTH = 80;
 const REPO_CONFIG = (await loadReposFromConfig(true))
   .filter((r) => r.includes("mcr") || r.includes("mfp"))
   .reduce((acc, repo) => {
-    acc[repo] = { dryRun: true };
+    acc[repo] = { dryRun: false };
     return acc;
   }, {});
 
