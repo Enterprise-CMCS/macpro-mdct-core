@@ -237,17 +237,7 @@
               }
             ]
           },
-          "required_pull_request_reviews": {
-            "dismiss_stale_reviews": true,
-            "require_code_owner_reviews": false,
-            "require_last_push_approval": false,
-            "required_approving_review_count": 1,
-            "null": {
-              "users": ["mdct-github-service-account"],
-              "teams": [],
-              "apps": []
-            }
-          },
+          "required_pull_request_reviews": null,
           "required_signatures": false,
           "enforce_admins": false,
           "required_linear_history": true,
@@ -287,7 +277,17 @@
                 "app_id": 15368
               }
             ]
-          }
+          },
+          "required_pull_request_reviews": {
+            "dismiss_stale_reviews": true,
+            "require_code_owner_reviews": true,
+            "require_last_push_approval": false,
+            "required_approving_review_count": 1
+          },
+
+          "required_signatures": false,
+          "enforce_admins": false,
+          "required_conversation_resolution": true
         }
       }
     },
@@ -331,17 +331,7 @@
               }
             ]
           },
-          "required_pull_request_reviews": {
-            "dismiss_stale_reviews": true,
-            "require_code_owner_reviews": false,
-            "require_last_push_approval": false,
-            "required_approving_review_count": 1,
-            "null": {
-              "users": ["mdct-github-service-account"],
-              "teams": [],
-              "apps": []
-            }
-          },
+          "required_pull_request_reviews": null,
           "required_signatures": false,
           "enforce_admins": false,
           "required_linear_history": true,
@@ -381,7 +371,16 @@
                 "app_id": 15368
               }
             ]
-          }
+          },
+          "required_pull_request_reviews": {
+            "dismiss_stale_reviews": true,
+            "require_code_owner_reviews": true,
+            "require_last_push_approval": false,
+            "required_approving_review_count": 1
+          },
+          "required_signatures": false,
+          "enforce_admins": false,
+          "required_conversation_resolution": true
         }
       }
     }
