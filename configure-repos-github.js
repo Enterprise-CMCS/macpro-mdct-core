@@ -159,6 +159,31 @@ function convertEnvironmentToConfig(config) {
   return config;
 }
 
+function arraysEqualIgnoringOrder(arr1, arr2) {
+  if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
+  if (arr1.length !== arr2.length) return false;
+
+  const stringify1 = arr1.map(item => JSON.stringify(item)).sort();
+  const stringify2 = arr2.map(item => JSON.stringify(item)).sort();
+
+  return JSON.stringify(stringify1) === JSON.stringify(stringify2);
+}
+
+function findArrayDifferences(current, desired) {
+  const currentSet = new Set(current.map(item => JSON.stringify(item)));
+  const desiredSet = new Set(desired.map(item => JSON.stringify(item)));
+
+  const added = desired
+    .filter(item => !currentSet.has(JSON.stringify(item)))
+    .map(item => JSON.parse(JSON.stringify(item)));
+
+  const removed = current
+    .filter(item => !desiredSet.has(JSON.stringify(item)))
+    .map(item => JSON.parse(JSON.stringify(item)));
+
+  return { added, removed };
+}
+
 function compareObjects(current, desired, path = "") {
   const changes = [];
   const allKeys = new Set([
@@ -180,6 +205,17 @@ function compareObjects(current, desired, path = "") {
       !Array.isArray(desiredVal)
     ) {
       changes.push(...compareObjects(currentVal, desiredVal, fullPath));
+    } else if (Array.isArray(currentVal) && Array.isArray(desiredVal)) {
+      if (!arraysEqualIgnoringOrder(currentVal, desiredVal)) {
+        const diff = findArrayDifferences(currentVal, desiredVal);
+        changes.push({
+          field: fullPath,
+          from: currentVal,
+          to: desiredVal,
+          added: diff.added,
+          removed: diff.removed,
+        });
+      }
     } else if (JSON.stringify(currentVal) !== JSON.stringify(desiredVal)) {
       changes.push({
         field: fullPath,
@@ -294,10 +330,24 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentProtection, mergedRules);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map(
-          (c) =>
-            `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
-        );
+        const changeStrings = changes.map((c) => {
+          if (c.added !== undefined || c.removed !== undefined) {
+            const parts = [];
+            if (c.removed && c.removed.length > 0) {
+              parts.push(
+                `removed: ${c.removed.map((item) => JSON.stringify(item)).join(", ")}`
+              );
+            }
+            if (c.added && c.added.length > 0) {
+              parts.push(
+                `added: ${c.added.map((item) => JSON.stringify(item)).join(", ")}`
+              );
+            }
+            return `${c.field}: ${parts.join("; ")}`;
+          } else {
+            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`;
+          }
+        });
         logList(
           `  ~ ${branch} (${changes.length} changes)`,
           changeStrings,
@@ -395,10 +445,24 @@ async function configureRepo(repo, dryRun = true) {
       const changes = compareObjects(currentEnv, desiredEnv);
 
       if (changes.length > 0) {
-        const changeStrings = changes.map(
-          (c) =>
-            `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`
-        );
+        const changeStrings = changes.map((c) => {
+          if (c.added !== undefined || c.removed !== undefined) {
+            const parts = [];
+            if (c.removed && c.removed.length > 0) {
+              parts.push(
+                `removed: ${c.removed.map((item) => JSON.stringify(item)).join(", ")}`
+              );
+            }
+            if (c.added && c.added.length > 0) {
+              parts.push(
+                `added: ${c.added.map((item) => JSON.stringify(item)).join(", ")}`
+              );
+            }
+            return `${c.field}: ${parts.join("; ")}`;
+          } else {
+            return `${c.field}: ${JSON.stringify(c.from)} -> ${JSON.stringify(c.to)}`;
+          }
+        });
         logList(
           `  ~ ${envName} (${changes.length} changes)`,
           changeStrings,
