@@ -17,10 +17,6 @@
             "app_id": 15368
           },
           {
-            "context": "assignAuthor",
-            "app_id": 15368
-          },
-          {
             "context": "qlty check",
             "app_id": 890766
           },
@@ -46,12 +42,7 @@
         "dismiss_stale_reviews": true,
         "require_code_owner_reviews": false,
         "require_last_push_approval": false,
-        "required_approving_review_count": 1,
-        "bypass_pull_request_allowances": {
-          "users": ["mdct-github-service-account"],
-          "teams": [],
-          "apps": []
-        }
+        "required_approving_review_count": 1
       },
       "required_signatures": false,
       "enforce_admins": false,
@@ -77,10 +68,6 @@
           },
           {
             "context": "deploy",
-            "app_id": 15368
-          },
-          {
-            "context": "assignAuthor",
             "app_id": 15368
           },
           {
@@ -120,10 +107,6 @@
           {
             "context": "CodeQL",
             "app_id": 57789
-          },
-          {
-            "context": "assignAuthor",
-            "app_id": 15368
           },
           {
             "context": "prchecks",
