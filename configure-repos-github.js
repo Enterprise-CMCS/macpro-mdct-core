@@ -15,9 +15,9 @@ const CONFIG_PATH = path.join(ROOT_DIR, "repo-settings.json");
 const SEPARATOR_WIDTH = 80;
 
 const REPO_CONFIG = (await loadReposFromConfig(true))
-  // .filter((r) => r.includes("carts"))
+  .filter((r) => r.includes("carts") || r.includes("mfp"))
   .reduce((acc, repo) => {
-    acc[repo] = { dryRun: true };
+    acc[repo] = { dryRun: false };
     return acc;
   }, {});
 
