@@ -40,3 +40,10 @@ repos:
     rev: v8.12.0
     hooks:
       - id: gitleaks
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: typescript-check
+        entry: bash -c "yarn tsc --noEmit"
+        language: system
+        pass_filenames: false

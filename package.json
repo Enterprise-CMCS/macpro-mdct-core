@@ -5,7 +5,17 @@
     "sync-github": "node sync-files-github.js"
   },
   "devDependencies": {
+    "@aws-sdk/client-cloudformation": "^3.744.0",
+    "@aws-sdk/client-lambda": "^3.744.0",
+    "@aws-sdk/client-secrets-manager": "^3.744.0",
+    "@aws-sdk/client-sts": "^3.744.0",
     "@octokit/rest": "^22.0.0",
-    "simple-git": "^3.28.0"
+    "@types/node": "^22.19.2",
+    "@types/yargs": "^17.0.35",
+    "aws-cdk-lib": "^2.185.0",
+    "constructs": "^10.3.0",
+    "simple-git": "^3.28.0",
+    "typescript": "^5.9.3",
+    "yargs": "^16.1.1"
   }
 }
