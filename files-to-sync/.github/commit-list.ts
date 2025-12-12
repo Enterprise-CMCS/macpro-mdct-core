@@ -23,9 +23,7 @@ function extractTickets(text: string, pr: boolean = false) {
 
   if (pr) {
     // Extract only between Related ticket heading and the next heading
-    const sectionMatch = text.match(
-      /### Related ticket([\s\S]*?)###/i
-    );
+    const sectionMatch = text.match(/### Related ticket([\s\S]*?)###/i);
     if (!sectionMatch) return [];
 
     section = sectionMatch[1];
