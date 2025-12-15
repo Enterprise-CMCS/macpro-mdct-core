@@ -28,7 +28,7 @@ jobs:
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Configure repositories
-        run: node configure-repos-github.js
+        run: node configure-repos-github.ts
         env:
           GITHUB_TOKEN: ${{ steps.app-token-step.outputs.token }}
 
