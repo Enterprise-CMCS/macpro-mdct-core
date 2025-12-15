@@ -10,7 +10,7 @@ if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = path.join(ROOT_DIR, "repo-settings.json");
+const CONFIG_PATH = path.join(ROOT_DIR, ".github", "repo-settings.json");
 
 const SEPARATOR_WIDTH = 80;
 
