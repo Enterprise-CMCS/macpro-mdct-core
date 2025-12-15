@@ -2,10 +2,6 @@ name: Configure Repositories
 
 on:
   workflow_dispatch:
-  # TODO: temporary trigger for testing
-  push:
-    branches:
-      - configure-repos
 
 jobs:
   configure:
