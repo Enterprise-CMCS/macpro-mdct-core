@@ -1,0 +1,41 @@
+name: Configure Repositories
+
+on:
+  workflow_dispatch:
+
+jobs:
+  configure:
+    name: Configure Repository Settings
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install dependencies
+        run: npm install @octokit/rest
+
+      - name: Get GitHub App token
+        id: app-token-step
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.GH_APP_ID }}
+          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Configure repositories
+        run: node .github/configure-repos-github.ts
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token-step.outputs.token }}
+
+      - name: Upload current config snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: config-snapshots-${{ github.run_number }}
+          path: config-snapshots/
+          retention-days: 90
