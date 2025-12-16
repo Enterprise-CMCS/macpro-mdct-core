@@ -2,15 +2,15 @@ import { Octokit } from "@octokit/rest";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadReposFromConfig } from "./sync-files-common.js";
+import { loadReposFromConfig } from "../sync-files-common.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = path.join(ROOT_DIR, ".github", "repo-settings.json");
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const CONFIG_PATH = path.join(SCRIPT_DIR, "repo-settings.json");
 
 const SEPARATOR_WIDTH = 80;
 
@@ -148,8 +148,16 @@ function convertBranchProtectionToConfig(config) {
 
   const allowances =
     config.required_pull_request_reviews?.bypass_pull_request_allowances;
-  if (allowances?.users) {
-    allowances.users = allowances.users.map((u) => u.login ?? u);
+  if (allowances) {
+    if (allowances.users) {
+      allowances.users = allowances.users.map((u) => u.login ?? u);
+    }
+    const isEmpty = Object.values(allowances).every(
+      (v) => Array.isArray(v) && v.length === 0
+    );
+    if (isEmpty) {
+      config.required_pull_request_reviews.bypass_pull_request_allowances = null;
+    }
   }
 
   return config;
@@ -345,10 +353,10 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will add protection", branchesToAdd, "+");
   }
 
-  if (branchesToUpdate.length > 0) {
-    const branchesWithChanges = [];
-    const branchesWithoutChanges = [];
+  const branchesWithChanges = [];
+  const branchesWithoutChanges = [];
 
+  if (branchesToUpdate.length > 0) {
     for (const branch of branchesToUpdate) {
       const mergedRules = mergeWithDefaults(config.branchProtection[branch]);
       const currentProtection = await getCurrentBranchProtection(
@@ -418,18 +426,30 @@ async function configureRepo(repo, dryRun = true) {
   }
   console.log();
 
-  if (configuredBranches.length > 0) {
-    for (const [branch, rules] of Object.entries(config.branchProtection)) {
-      const mergedRules = mergeWithDefaults(rules);
+  const branchesToApply = [
+    ...branchesToAdd,
+    ...branchesWithChanges.map((b) => b.branch),
+  ];
 
-      if (!dryRun) {
-        await octokit.rest.repos.updateBranchProtection({
-          owner,
-          repo: repoName,
-          branch,
-          ...mergedRules,
-        });
-      }
+  for (const branch of branchesToApply) {
+    const rules = config.branchProtection[branch];
+    const mergedRules = mergeWithDefaults(rules);
+
+    if (mergedRules.required_pull_request_reviews?.bypass_pull_request_allowances === null) {
+      mergedRules.required_pull_request_reviews.bypass_pull_request_allowances = {
+        users: [],
+        teams: [],
+        apps: [],
+      };
+    }
+
+    if (!dryRun) {
+      await octokit.rest.repos.updateBranchProtection({
+        owner,
+        repo: repoName,
+        branch,
+        ...mergedRules,
+      });
     }
   }
 
@@ -567,7 +587,7 @@ async function configureRepo(repo, dryRun = true) {
     .replace(/[:.]/g, "-")
     .replace("T", "-")
     .replace("Z", "");
-  const outputDir = path.join(ROOT_DIR, "config-snapshots");
+  const outputDir = path.join(SCRIPT_DIR, "config-snapshots");
   await fs.mkdir(outputDir, { recursive: true });
 
   const outputFilename = `current-config-${repoName}-${timestamp}.json`;
