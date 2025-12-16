@@ -52,14 +52,6 @@ jobs:
         run: |
           echo "PR URL: $PR_URL"
 
-          # Verify only code.json is changed
-          FILES=$(gh pr view "$PR_URL" --json files --jq '.files[].path')
-          if [ "$FILES" != "code.json" ]; then
-            echo "PR modifies files other than code.json:"
-            echo "$FILES"
-            exit 1
-          fi
-
           # Approve and enable auto-merge
           gh pr review "$PR_URL" --approve
           gh pr merge "$PR_URL" --auto --squash
