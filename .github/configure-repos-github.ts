@@ -156,7 +156,8 @@ function convertBranchProtectionToConfig(config) {
       (v) => Array.isArray(v) && v.length === 0
     );
     if (isEmpty) {
-      config.required_pull_request_reviews.bypass_pull_request_allowances = null;
+      config.required_pull_request_reviews.bypass_pull_request_allowances =
+        null;
     }
   }
 
@@ -435,12 +436,16 @@ async function configureRepo(repo, dryRun = true) {
     const rules = config.branchProtection[branch];
     const mergedRules = mergeWithDefaults(rules);
 
-    if (mergedRules.required_pull_request_reviews?.bypass_pull_request_allowances === null) {
-      mergedRules.required_pull_request_reviews.bypass_pull_request_allowances = {
-        users: [],
-        teams: [],
-        apps: [],
-      };
+    if (
+      mergedRules.required_pull_request_reviews
+        ?.bypass_pull_request_allowances === null
+    ) {
+      mergedRules.required_pull_request_reviews.bypass_pull_request_allowances =
+        {
+          users: [],
+          teams: [],
+          apps: [],
+        };
     }
 
     if (!dryRun) {

@@ -24,7 +24,7 @@ jobs:
       - name: Configure pre-commit to skip irrelevant checks
         run: echo "SKIP=typescript-check-cli,typescript-check-api,typescript-check-ui,typescript-check-cdk,no-commit-to-branch" >> $GITHUB_ENV
       - uses: pre-commit/action@v3.0.1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
       - name: run unit tests
