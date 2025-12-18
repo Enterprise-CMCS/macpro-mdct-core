@@ -1,6 +1,9 @@
-// Local sync script - copies files to local repos without creating PRs
-// Usage: node sync-files-local.js
-// Or with custom repos: REPOS="carts,qmr" node sync-files-local.js
+/**
+ * Local sync script - copies files to local repos without creating PRs
+ * Usage: node sync-files-local.js
+ * Or with custom repos: REPOS="carts,qmr" node sync-files-local.js
+ */
+/* eslint-disable no-console */
 
 import fs from "node:fs/promises";
 import path from "node:path";
