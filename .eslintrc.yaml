@@ -27,3 +27,10 @@ rules:
   multiline-comment-style:
     - error
     - starred-block
+
+overrides:
+  - files:
+      - "files-to-sync/cli/**"
+      - "files-to-sync/deployment/**"
+    rules:
+      no-console: off
