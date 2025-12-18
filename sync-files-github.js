@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 // GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.js
 import { Octokit } from "@octokit/rest";
 import simpleGit from "simple-git";
