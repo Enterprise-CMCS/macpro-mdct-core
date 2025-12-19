@@ -12,6 +12,7 @@ import {
   sha256,
   getSyncHash,
   loadReposFromConfig,
+  checkForDisclaimer,
 } from "./sync-files-common.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -32,12 +33,6 @@ async function cloneRepo(repo) {
     dest
   );
   return dest;
-}
-
-async function checkForDisclaimer(filePath) {
-  const content = await fs.readFile(filePath, "utf-8");
-  const firstThreeLines = content.split("\n").slice(0, 3).join("\n");
-  return firstThreeLines.includes("managed by macpro-mdct-core");
 }
 
 async function syncRepo(repo) {
