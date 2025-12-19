@@ -34,6 +34,12 @@ async function cloneRepo(repo) {
   return dest;
 }
 
+async function checkForDisclaimer(filePath) {
+  const content = await fs.readFile(filePath, "utf-8");
+  const firstThreeLines = content.split("\n").slice(0, 3).join("\n");
+  return firstThreeLines.includes("managed by macpro-mdct-core");
+}
+
 async function syncRepo(repo) {
   const [owner, repoName] = repo.split("/");
   const prs = await octokit.pulls.list({
@@ -52,6 +58,7 @@ async function syncRepo(repo) {
   await git.addConfig("user.name", "Source Files");
   await git.addConfig("user.email", "action@github.com");
 
+  // checks for additions or modifications in core to apply
   const filesToSync = await getAllFiles(SOURCE_FILES_DIR);
   let changesMade = false;
 
@@ -77,11 +84,29 @@ async function syncRepo(repo) {
     }
   }
 
+  // checks for removals in core to apply
+  const localFiles = await getAllFiles(local);
+
+  for (const relPath of localFiles) {
+    const targetFile = path.join(local, relPath);
+    const targetSynced = await checkForDisclaimer(targetFile);
+
+    if (!targetSynced) continue;
+    const sourceFile = path.join(SOURCE_FILES_DIR, relPath);
+    try {
+      await fs.access(sourceFile);
+    } catch {
+      await fs.unlink(targetFile);
+      changesMade = true;
+    }
+  }
+
+  // makes changes to target repo
   if (changesMade) {
     const syncHash = await getSyncHash(filesToSync, SOURCE_FILES_DIR);
     const branchName = `${BRANCH_NAME}-${syncHash}`;
     await git.checkoutLocalBranch(branchName);
-    await git.add(filesToSync);
+    await git.add(".");
     await git.commit("sync: update source files");
     await git.push("origin", branchName);
 
