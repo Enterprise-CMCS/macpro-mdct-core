@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 // GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.js
 import { Octokit } from "@octokit/rest";
 import simpleGit from "simple-git";
@@ -10,6 +12,7 @@ import {
   sha256,
   getSyncHash,
   loadReposFromConfig,
+  checkForDisclaimer,
 } from "./sync-files-common.js";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -50,6 +53,7 @@ async function syncRepo(repo) {
   await git.addConfig("user.name", "Source Files");
   await git.addConfig("user.email", "action@github.com");
 
+  // checks for additions or modifications in core to apply
   const filesToSync = await getAllFiles(SOURCE_FILES_DIR);
   let changesMade = false;
 
@@ -75,11 +79,29 @@ async function syncRepo(repo) {
     }
   }
 
+  // checks for removals in core to apply
+  const localFiles = await getAllFiles(local);
+
+  for (const relPath of localFiles) {
+    const targetFile = path.join(local, relPath);
+    const targetSynced = await checkForDisclaimer(targetFile);
+
+    if (!targetSynced) continue;
+    const sourceFile = path.join(SOURCE_FILES_DIR, relPath);
+    try {
+      await fs.access(sourceFile);
+    } catch {
+      await fs.unlink(targetFile);
+      changesMade = true;
+    }
+  }
+
+  // makes changes to target repo
   if (changesMade) {
     const syncHash = await getSyncHash(filesToSync, SOURCE_FILES_DIR);
     const branchName = `${BRANCH_NAME}-${syncHash}`;
     await git.checkoutLocalBranch(branchName);
-    await git.add(filesToSync);
+    await git.add(".");
     await git.commit("sync: update source files");
     await git.push("origin", branchName);
 

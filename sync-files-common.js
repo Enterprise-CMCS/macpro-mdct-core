@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 // Common utilities for sync-files scripts
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -91,4 +93,13 @@ export async function getSyncHash(files, sourceFilesDir) {
     .update(hashes.join(""))
     .digest("hex")
     .slice(0, 8);
+}
+
+/**
+ * Figure out if a file contains the disclaimer indicating it's managed by macpro-mdct-core
+ */
+export async function checkForDisclaimer(filePath) {
+  const content = await fs.readFile(filePath, "utf-8");
+  const firstThreeLines = content.split("\n").slice(0, 3).join("\n");
+  return firstThreeLines.includes("managed by macpro-mdct-core");
 }
