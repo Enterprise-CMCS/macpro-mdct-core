@@ -12,6 +12,7 @@ import {
   getAllFiles,
   sha256,
   loadReposFromConfig,
+  checkForDisclaimer,
 } from "./sync-files-common.js";
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -20,7 +21,7 @@ const PROJECTS_DIR = path.dirname(ROOT_DIR); // Parent directory containing all 
 
 // Get repos from environment variable or load from config
 const reposToSync = process.env.REPOS
-  ? process.env.REPOS.split(",").map((r) => r.trim())
+  ? process.env.REPOS.split(",").map((r) => `macpro-mdct-${r.trim()}`)
   : await loadReposFromConfig(false); // false = just repo names, not full paths
 
 async function syncLocalRepo(repoName) {
@@ -66,7 +67,31 @@ async function syncLocalRepo(repoName) {
     }
   }
 
-  return { synced: syncedCount, created: createdCount, skipped: false };
+  // checks for removals in core to apply
+  const localFiles = await getAllFiles(targetRepoDir);
+  let removedCount = 0;
+
+  for (const relPath of localFiles) {
+    const targetFile = path.join(targetRepoDir, relPath);
+    const targetSynced = await checkForDisclaimer(targetFile);
+
+    if (!targetSynced) continue;
+    const sourceFile = path.join(SOURCE_FILES_DIR, relPath);
+    try {
+      await fs.access(sourceFile);
+    } catch {
+      await fs.unlink(targetFile);
+      removedCount++;
+      console.log(`  ✂ Removed: ${relPath}`);
+    }
+  }
+
+  return {
+    synced: syncedCount,
+    created: createdCount,
+    removed: removedCount,
+    skipped: false,
+  };
 }
 
 async function main() {
@@ -114,7 +139,7 @@ async function main() {
   if (successful.length > 0) {
     console.log(`\n✅ Successfully synced (${successful.length}):`);
     successful.forEach(([repo, result]) => {
-      const changes = result.created + result.synced;
+      const changes = result.created + result.synced + result.removed;
       const status = changes > 0 ? `${changes} file(s) changed` : "up to date";
       console.log(`   ${repo}: ${status}`);
     });
