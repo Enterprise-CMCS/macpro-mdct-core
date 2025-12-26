@@ -1,8 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "sync-local": "node sync-files-local.js",
-    "sync-github": "node sync-files-github.js"
+    "sync-local": "node sync-files-local.ts",
+    "sync-github": "node sync-files-github.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-cloudformation": "^3.946.0",
@@ -18,7 +18,7 @@
     "constructs": "^10.3.0",
     "eslint": "^8.57.1",
     "prettier": "2.4.1",
-    "simple-git": "^3.28.0",
+    "simple-git": "^3.30.0",
     "typescript": "^5.9.3",
     "yargs": "^16.1.1"
   }
