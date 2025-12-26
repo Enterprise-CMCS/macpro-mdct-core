@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 
-// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.js
+// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.ts
 import { Octokit } from "@octokit/rest";
-import simpleGit from "simple-git";
+import { simpleGit } from "simple-git";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -13,7 +13,7 @@ import {
   getSyncHash,
   loadReposFromConfig,
   checkForDisclaimer,
-} from "./sync-files-common.js";
+} from "./sync-files-common.ts";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
@@ -26,7 +26,7 @@ const SOURCE_FILES_DIR = path.join(ROOT_DIR, "files-to-sync");
 
 const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "repo-sync-"));
 
-async function cloneRepo(repo) {
+async function cloneRepo(repo: string): Promise<string> {
   const dest = path.join(tmpRoot, repo.replace("/", "_"));
   await simpleGit().clone(
     `https://x-access-token:${GITHUB_TOKEN}@github.com/${repo}.git`,
@@ -35,7 +35,7 @@ async function cloneRepo(repo) {
   return dest;
 }
 
-async function syncRepo(repo) {
+async function syncRepo(repo: string): Promise<void> {
   const [owner, repoName] = repo.split("/");
   const prs = await octokit.pulls.list({
     owner,
@@ -116,7 +116,7 @@ async function syncRepo(repo) {
   }
 }
 
-async function main() {
+async function main(): Promise<void> {
   const repos = await loadReposFromConfig(true); // true = keep full path format
 
   for (const repo of repos) {
