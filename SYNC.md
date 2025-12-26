@@ -10,20 +10,20 @@ The local sync script copies files directly to your local repo directories witho
 
 ```bash
 # Sync to all 6 repos (carts, qmr, hcbs, mcr, mfp, seds)
-npm run sync-local
+yarn sync-local
 
 # Or directly with node
-node sync-files-local.js
+node sync-files-local.ts
 ```
 
 ### Sync to Specific Repos
 
 ```bash
 # Sync to just a few repos
-REPOS="carts,qmr" npm run sync-local
+REPOS="carts,qmr" yarn sync-local
 
 # Or with custom list
-REPOS="macpro-mdct-hcbs,macpro-mdct-mfp" node sync-files-local.js
+REPOS="hcbs,mfp" node sync-files-local.ts
 ```
 
 ### How It Works
@@ -68,7 +68,7 @@ The GitHub sync script creates PRs in target repos. This runs automatically via 
 
 ```bash
 # Requires GITHUB_TOKEN
-GITHUB_TOKEN=github_pat_YOUR_TOKEN npm run sync-github
+GITHUB_TOKEN=github_pat_YOUR_TOKEN yarn sync-github
 ```
 
 ### Configuration
@@ -109,7 +109,7 @@ All files and directories in `files-to-sync/` are synced, maintaining the same d
 ## Development Workflow
 
 1. Make changes to files in `files-to-sync/`
-2. Test locally: `npm run sync-local`
+2. Test locally: `yarn sync-local`
 3. Review changes in target repos
 4. Commit changes to both core and target repos
 5. When ready, let GitHub Actions sync to remaining repos
