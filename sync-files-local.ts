@@ -1,10 +1,8 @@
-/* eslint-disable no-console */
+// Local sync script - copies files to local repos without creating PRs
 
-/**
- * Local sync script - copies files to local repos without creating PRs
- * Usage: node sync-files-local.js
- * Or with custom repos: REPOS="carts,qmr" node sync-files-local.js
- */
+// REPOS="carts,qmr" node sync-files-local.ts
+
+/* eslint-disable no-console */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +11,7 @@ import {
   sha256,
   loadReposFromConfig,
   checkForDisclaimer,
-} from "./sync-files-common.js";
+} from "./sync-files-common.ts";
 
 const ROOT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_FILES_DIR = path.join(ROOT_DIR, "files-to-sync");
@@ -24,7 +22,18 @@ const reposToSync = process.env.REPOS
   ? process.env.REPOS.split(",").map((r) => `macpro-mdct-${r.trim()}`)
   : await loadReposFromConfig(false); // false = just repo names, not full paths
 
-async function syncLocalRepo(repoName) {
+interface SyncResult {
+  synced: number;
+  created: number;
+  removed: number;
+  skipped: boolean;
+}
+
+interface SyncResultWithError extends Partial<SyncResult> {
+  error?: string;
+}
+
+async function syncLocalRepo(repoName: string): Promise<SyncResult> {
   const targetRepoDir = path.join(PROJECTS_DIR, repoName);
 
   // Check if repo exists locally
@@ -34,7 +43,7 @@ async function syncLocalRepo(repoName) {
     console.log(
       `⚠️  Skipping ${repoName} - directory not found at ${targetRepoDir}`
     );
-    return { synced: 0, created: 0, skipped: true };
+    return { synced: 0, created: 0, removed: 0, skipped: true };
   }
 
   const filesToSync = await getAllFiles(SOURCE_FILES_DIR);
@@ -94,13 +103,13 @@ async function syncLocalRepo(repoName) {
   };
 }
 
-async function main() {
+async function main(): Promise<void> {
   console.log("🔄 Starting local file sync...\n");
   console.log(`📂 Source: ${SOURCE_FILES_DIR}`);
   console.log(`📂 Target: ${PROJECTS_DIR}\n`);
   console.log(`📋 Repos to sync: ${reposToSync.join(", ")}\n`);
 
-  const results = {};
+  const results: Record<string, SyncResultWithError> = {};
 
   for (const repo of reposToSync) {
     console.log(`\n🔍 Syncing ${repo}...`);
@@ -112,16 +121,17 @@ async function main() {
         continue;
       }
 
-      if (result.synced === 0 && result.created === 0) {
+      if (result.synced === 0 && result.created === 0 && result.removed === 0) {
         console.log(`  ✓ Already up to date`);
       } else {
         console.log(
-          `  ✓ Done: ${result.created} created, ${result.synced} updated`
+          `  ✓ Done: ${result.created} created, ${result.synced} updated, ${result.removed} removed`
         );
       }
     } catch (err) {
-      console.error(`  ❌ Failed to sync ${repo}:`, err.message);
-      results[repo] = { error: err.message };
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(`  ❌ Failed to sync ${repo}:`, errorMessage);
+      results[repo] = { error: errorMessage };
     }
   }
 
@@ -139,7 +149,8 @@ async function main() {
   if (successful.length > 0) {
     console.log(`\n✅ Successfully synced (${successful.length}):`);
     successful.forEach(([repo, result]) => {
-      const changes = result.created + result.synced + result.removed;
+      const changes =
+        (result.created || 0) + (result.synced || 0) + (result.removed || 0);
       const status = changes > 0 ? `${changes} file(s) changed` : "up to date";
       console.log(`   ${repo}: ${status}`);
     });
