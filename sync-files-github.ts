@@ -1,6 +1,6 @@
+#!/usr/bin/env node
 /* eslint-disable no-console */
-
-// GITHUB_TOKEN=github_pat_MORE_CHARACTERS node sync-files-github.ts
+// GITHUB_TOKEN=github_pat_MORE_CHARACTERS ./sync-files-github.ts
 import { Octokit } from "@octokit/rest";
 import { simpleGit } from "simple-git";
 import fs from "node:fs/promises";
