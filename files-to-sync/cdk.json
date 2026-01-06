@@ -9,7 +9,8 @@
       "deployment/**",
       "services/app-api/**",
       "services/carts-bigmac-streams/**"
-    ]
+    ],
+    "exclude": ["services/app-api/coverage/**"]
   },
   "context": {
     "@aws-cdk/core:checkSecretUsage": true,
