@@ -14,10 +14,13 @@ export async function getAllFiles(
   const files = await Promise.all(
     entries.map(async (entry) => {
       const fullPath = path.join(dir, entry.name);
-      // Skip node_modules and .cdk directories
+      // Skip node_modules and .cdk and .git and .build directories
       if (
         entry.isDirectory() &&
-        (entry.name === "node_modules" || entry.name === ".cdk")
+        (entry.name === "node_modules" ||
+          entry.name === ".cdk" ||
+          entry.name === ".git" ||
+          entry.name === ".build")
       ) {
         return [];
       }

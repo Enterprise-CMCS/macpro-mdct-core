@@ -2,8 +2,8 @@
   "packageManager": "yarn@4.12.0",
   "type": "module",
   "scripts": {
-    "sync-local": "node sync-files-local.ts",
-    "sync-github": "node sync-files-github.ts"
+    "sync-local": "./sync-files-local.ts",
+    "sync-github": "./sync-files-github.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-cloudformation": "^3.946.0",
