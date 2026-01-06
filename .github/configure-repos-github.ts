@@ -3,7 +3,7 @@ import { Octokit } from "@octokit/rest";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadReposFromConfig } from "../sync-files-common.js";
+import { loadReposFromConfig } from "../sync-files-common.ts";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 if (!GITHUB_TOKEN) throw new Error("GITHUB_TOKEN is not set");
