@@ -5,4 +5,4 @@
  */
 declare module "*/deployment-config.js";
 declare module "*/parent.js";
-declare module "*/utils.js";
+declare module "*/utils.ts";
