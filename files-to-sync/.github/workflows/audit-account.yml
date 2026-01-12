@@ -97,13 +97,23 @@ jobs:
           pushd macpro-mdct-tools/scripts
           ./scanResources.ts || { echo "scanResources.ts failed"; exit 1; }
           popd
-          REPORT_FILE=$(ls macpro-mdct-tools/scripts/unmanaged-resources-*.txt 2>/dev/null | head -n1 || true)
-          if [ -n "$REPORT_FILE" ]; then
+          REPORT_FILE=$(ls macpro-mdct-tools/scripts/unmanaged-resources-*.txt 2>/dev/null | grep -v -- '-delete-commands\.txt$' | head -n1 || true)
+          if [ -n "${REPORT_FILE:-}" ]; then
             echo "Found unmanaged resources report: $REPORT_FILE"
             cp "$REPORT_FILE" .github/reports/
           else
             echo "No unmanaged resources report generated."
           fi
+
+          DELETE_FILE=$(ls macpro-mdct-tools/scripts/unmanaged-resources-*-delete-commands.txt 2>/dev/null | head -n1 || true)
+          if [ -n "${DELETE_FILE:-}" ]; then
+            echo "Found unmanaged resources delete commands: $DELETE_FILE"
+            cp "$DELETE_FILE" .github/reports/
+          else
+            echo "No delete commands file generated (likely no unmanaged deletables found)."
+          fi
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Assemble CSV files
         run: |
