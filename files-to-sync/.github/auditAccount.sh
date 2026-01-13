@@ -30,11 +30,11 @@ fi
 
 #Create array of objects with the branch name and the interpolated branch name (for bot created branches)
 get_branches () {
- local RAW_BRANCHES=$(git for-each-ref --format='%(refname)' refs/remotes/origin | sed 's|^.\+\/||g')
+ local RAW_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/remotes/origin | sed 's|^origin/||')
  local BRANCHES=()
  for B in $RAW_BRANCHES; do
    [ "${B}" == "HEAD" ] && continue
-   IBRANCH=$(./setBranchName.sh ${B})
+   IBRANCH=$(./setBranchName.ts ${B})
    BRANCHES+=($(echo '{"BRANCH":"'${B}'","IBRANCH":"'${IBRANCH}'"}'))
  done
 
