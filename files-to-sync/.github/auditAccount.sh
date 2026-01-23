@@ -5,12 +5,12 @@ git fetch --all > /dev/null
 
 #Parse inputs
 case ${1-} in
-  "ci_inactive"|"cf_other"|"untagged"|"orphaned_topics")
+  "ci_inactive"|"untagged"|"orphaned_topics")
     OP=${1-}
     ;;
   *)
     echo "Error:  unknown operation"
-    echo "Usage: ${0} [ci_inactive|cf_other|untagged|orphaned_topics] [resource_tagging_response|null]" && exit 1
+    echo "Usage: ${0} [ci_inactive|untagged|orphaned_topics] [resource_tagging_response|null]" && exit 1
     ;;
 esac
 
@@ -59,22 +59,6 @@ ci_active () {
 #Produce report for active stacks created by the ci pipeline (does NOT have a corresponding branch)
 ci_inactive () {
   jq -r '[.[] | select(.BRANCH == null)] | del(.[].BRANCH) | sort_by(.STAGE)' <<< $(get_composite_ci "${1}")
-}
-
-#Produce report for resources that have tags but were not created by the ci pipeline
-#Excludes CMS-Cloud, CMS-OIT, and AWS Backup resources (managed by other teams)
-cf_other () {
-  jq -r '[.ResourceTagMappingList[] | select((.Tags? | length) > 0) | del(select(.Tags[].Key=="STAGE")) // empty |
-         {
-           InferredId: .Tags[] | select(.Key=="aws:cloudformation:stack-name" or .Key=="cms-cloud-service" or .Key=="Name").Value,
-           ResourceARN: .ResourceARN
-         }]
-         | [.[] | select(
-             (.InferredId | test("^(cms-cloud|CMS-Cloud|cms-oit|CMS-OIT|cmscloud|NASH|nucleus|opensearch|flowlogs|logging|continuous-diagnostics)"; "i") | not) and
-             (.InferredId | test("Backup"; "i") | not) and
-             (.ResourceARN | test("backup|tenable|guardduty"; "i") | not)
-           )]
-         | sort' <<< "${1}"
 }
 
 #Produce report for resources that are untagged (some are still created by the ci pipeline)
