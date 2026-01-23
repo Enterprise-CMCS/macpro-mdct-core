@@ -69,7 +69,7 @@ if [ "$LOCAL" = true ]; then
 fi
 
 IMMUTABLE_FLAG=""
-[ -n "$CI" ] && IMMUTABLE_FLAG="--immutable"
+[ -n "${CI:-}" ] && IMMUTABLE_FLAG="--immutable"
 
 yarn install $IMMUTABLE_FLAG >/dev/null 2>&1 || {
 echo "Dependency install failed (root)" >&2; exit 1; }
