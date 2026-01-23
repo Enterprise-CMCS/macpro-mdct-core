@@ -89,6 +89,5 @@ export async function getSyncHash(
 // Figure out if a file contains the disclaimer indicating it's managed by macpro-mdct-core
 export async function checkForDisclaimer(filePath: string): Promise<boolean> {
   const content = await fs.readFile(filePath, "utf-8");
-  const firstThreeLines = content.split("\n").slice(0, 3).join("\n");
-  return firstThreeLines.includes("managed by macpro-mdct-core");
+  return content.includes("managed by macpro-mdct-core");
 }
