@@ -1,5 +1,4 @@
 {
-  "packageManager": "yarn@4.12.0",
   "type": "module",
   "scripts": {
     "sync-local": "./sync-files-local.ts",
@@ -22,5 +21,6 @@
     "simple-git": "^3.30.0",
     "typescript": "^5.9.3",
     "yargs": "^16.1.1"
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }
