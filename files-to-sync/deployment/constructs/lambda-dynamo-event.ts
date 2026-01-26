@@ -10,10 +10,9 @@ import {
   RemovalPolicy,
 } from "aws-cdk-lib";
 import { createHash } from "node:crypto";
-import { DynamoDBTable } from "./dynamodb-table.js";
+import { DynamoDBTable } from "./dynamodb-table.ts";
 
-interface LambdaDynamoEventProps
-  extends Partial<lambda_nodejs.NodejsFunctionProps> {
+interface LambdaDynamoEventProps extends Partial<lambda_nodejs.NodejsFunctionProps> {
   additionalPolicies?: iam.PolicyStatement[];
   stackName: string;
   tables: DynamoDBTable[];

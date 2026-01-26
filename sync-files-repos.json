@@ -5,6 +5,7 @@
     "Enterprise-CMCS/macpro-mdct-hcbs",
     "Enterprise-CMCS/macpro-mdct-carts",
     "Enterprise-CMCS/macpro-mdct-mcr",
-    "Enterprise-CMCS/macpro-mdct-mfp"
+    "Enterprise-CMCS/macpro-mdct-mfp",
+    "Enterprise-CMCS/macpro-mdct-rhtp"
   ]
 }

@@ -14,10 +14,13 @@ export async function getAllFiles(
   const files = await Promise.all(
     entries.map(async (entry) => {
       const fullPath = path.join(dir, entry.name);
-      // Skip node_modules and .cdk directories
+      // Skip node_modules and .cdk and .git and .build directories
       if (
         entry.isDirectory() &&
-        (entry.name === "node_modules" || entry.name === ".cdk")
+        (entry.name === "node_modules" ||
+          entry.name === ".cdk" ||
+          entry.name === ".git" ||
+          entry.name === ".build")
       ) {
         return [];
       }
@@ -86,6 +89,5 @@ export async function getSyncHash(
 // Figure out if a file contains the disclaimer indicating it's managed by macpro-mdct-core
 export async function checkForDisclaimer(filePath: string): Promise<boolean> {
   const content = await fs.readFile(filePath, "utf-8");
-  const firstThreeLines = content.split("\n").slice(0, 3).join("\n");
-  return firstThreeLines.includes("managed by macpro-mdct-core");
+  return content.includes("managed by macpro-mdct-core");
 }
