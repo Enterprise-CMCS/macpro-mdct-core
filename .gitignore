@@ -16,5 +16,4 @@ package-lock.json
 # misc
 .DS_Store
 tsconfig.tsbuildinfo
-.vscode/
 *.log
