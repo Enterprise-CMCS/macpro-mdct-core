@@ -1,0 +1,10 @@
+{
+  "comment": "This file is managed by macpro-mdct-core so if you'd like to change it let's do it there",
+  "recommendations": [
+    "redhat.vscode-yaml",
+    "oxc.oxc-vscode",
+    "waderyan.gitblame",
+    "vitest.explorer",
+    "firsttris.vscode-jest-runner"
+  ]
+}
