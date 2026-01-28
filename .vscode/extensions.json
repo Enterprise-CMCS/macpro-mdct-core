@@ -1,8 +1,6 @@
 {
   "recommendations": [
-    "redhat.vscode-yaml",
     "oxc.oxc-vscode",
-    "waderyan.gitblame",
     "vitest.explorer",
     "firsttris.vscode-jest-runner"
   ]
