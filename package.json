@@ -18,6 +18,7 @@
     "constructs": "^10.3.0",
     "eslint": "^8.57.1",
     "oxfmt": "^0.24.0",
+    "oxlint": "^1.41.0",
     "simple-git": "^3.30.0",
     "typescript": "^5.9.3",
     "yargs": "^16.1.1"
