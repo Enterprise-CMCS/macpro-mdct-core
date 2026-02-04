@@ -2,7 +2,6 @@
 // Local sync script - copies files to local repos without creating PRs
 
 // REPOS="carts,qmr" ./sync-files-local.ts
-/* eslint-disable no-console */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
