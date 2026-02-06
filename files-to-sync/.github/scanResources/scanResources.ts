@@ -102,16 +102,16 @@ async function checkGeneric(options: CheckGenericOptions) {
       continue;
     }
 
-    const excludedByPrefix =
-      excludePrefixKeys.length > 0 &&
-      excludePrefixKeys.some((p) => (p ? id.startsWith(p) : false));
+    const excludedByPrefix = excludePrefixKeys.some((p) =>
+      p ? id.startsWith(p) : false
+    );
 
     const excludedByExact =
       excludeExactKeys.length > 0 && excludeExactKeys.includes(id);
 
-    const excludedByContains =
-      excludeContainsKeys.length > 0 &&
-      excludeContainsKeys.some((s) => (s ? id.includes(s) : false));
+    const excludedByContains = excludeContainsKeys.some((s) =>
+      s ? id.includes(s) : false
+    );
 
     if (!(excludedByPrefix || excludedByExact || excludedByContains)) {
       unmanaged.push(id);
