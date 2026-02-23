@@ -5,6 +5,7 @@ on:
     # Every Monday at 400 UTC
     - cron: "0 4 * * 1"
   workflow_dispatch:
+  push:
 
 jobs:
   configure:
