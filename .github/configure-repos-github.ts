@@ -176,6 +176,14 @@ function convertEnvironmentToConfig(config) {
   return config;
 }
 
+function convertRepoSettingsToConfig(repoData, desiredSettings) {
+  const config = {};
+  for (const key in desiredSettings) {
+    config[key] = repoData[key];
+  }
+  return config;
+}
+
 function arraysEqualIgnoringOrder(arr1, arr2) {
   if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
   if (arr1.length !== arr2.length) return false;
@@ -303,6 +311,7 @@ async function configureRepo(repo, dryRun = true) {
   const configContent = await fs.readFile(CONFIG_PATH, "utf8");
   const baseConfig = JSON.parse(configContent);
   const config = {
+    repoSettings: baseConfig.repoSettings || {},
     branchProtection: {
       ...baseConfig.branchProtection,
       ...baseConfig.overrides?.[repoName]?.branchProtection,
@@ -314,9 +323,47 @@ async function configureRepo(repo, dryRun = true) {
   };
 
   const currentConfig = {
+    repoSettings: {},
     branchProtection: {},
     environments: [],
   };
+
+  console.log("REPO SETTINGS");
+  console.log("-".repeat(SEPARATOR_WIDTH));
+
+  const { data: repoData } = await octokit.rest.repos.get({
+    owner,
+    repo: repoName,
+  });
+
+  const desiredRepoSettings = config.repoSettings;
+  currentConfig.repoSettings = convertRepoSettingsToConfig(
+    repoData,
+    desiredRepoSettings
+  );
+  const repoSettingsChanges = compareObjects(
+    currentConfig.repoSettings,
+    desiredRepoSettings
+  );
+
+  if (repoSettingsChanges.length > 0) {
+    console.log("Will update:");
+    for (const change of repoSettingsChanges) {
+      console.log(
+        `  ${change.field}: ${JSON.stringify(change.from)} -> ${JSON.stringify(change.to)}`
+      );
+    }
+    if (!dryRun) {
+      await octokit.rest.repos.update({
+        owner,
+        repo: repoName,
+        ...desiredRepoSettings,
+      });
+    }
+  } else {
+    console.log("No changes needed");
+  }
+  console.log();
 
   console.log("BRANCH PROTECTION");
   console.log("-".repeat(SEPARATOR_WIDTH));
@@ -361,12 +408,10 @@ async function configureRepo(repo, dryRun = true) {
   if (branchesToUpdate.length > 0) {
     for (const branch of branchesToUpdate) {
       const mergedRules = mergeWithDefaults(config.branchProtection[branch]);
-      const currentProtection = await getCurrentBranchProtection(
-        owner,
-        repoName,
-        branch
+      const changes = compareObjects(
+        currentConfig.branchProtection[branch],
+        mergedRules
       );
-      const changes = compareObjects(currentProtection, mergedRules);
 
       if (changes.length > 0) {
         const changeStrings = changes.flatMap((c) => {
@@ -499,10 +544,10 @@ async function configureRepo(repo, dryRun = true) {
     logList("Will create", environmentsToAdd, "+");
   }
 
-  if (environmentsToUpdate.length > 0) {
-    const envsWithChanges = [];
-    const envsWithoutChanges = [];
+  const envsWithChanges = [];
+  const envsWithoutChanges = [];
 
+  if (environmentsToUpdate.length > 0) {
     for (const envName of environmentsToUpdate) {
       const currentEnv = currentConfig.environments.find(
         (e) => e.environment_name === envName
@@ -572,19 +617,23 @@ async function configureRepo(repo, dryRun = true) {
   }
   console.log();
 
-  if (configuredEnvironmentNames.length > 0) {
-    for (const env of config.environments) {
-      if (!dryRun) {
-        await octokit.rest.repos.createOrUpdateEnvironment({
-          owner,
-          repo: repoName,
-          environment_name: env.environment_name,
-          wait_timer: env.wait_timer,
-          prevent_self_review: env.prevent_self_review,
-          reviewers: env.reviewers,
-          deployment_branch_policy: env.deployment_branch_policy,
-        });
-      }
+  const environmentsToApply = [
+    ...environmentsToAdd,
+    ...envsWithChanges.map((e) => e.envName),
+  ];
+
+  for (const envName of environmentsToApply) {
+    const env = config.environments.find((e) => e.environment_name === envName);
+    if (!dryRun) {
+      await octokit.rest.repos.createOrUpdateEnvironment({
+        owner,
+        repo: repoName,
+        environment_name: env.environment_name,
+        wait_timer: env.wait_timer,
+        prevent_self_review: env.prevent_self_review,
+        reviewers: env.reviewers,
+        deployment_branch_policy: env.deployment_branch_policy,
+      });
     }
   }
 
