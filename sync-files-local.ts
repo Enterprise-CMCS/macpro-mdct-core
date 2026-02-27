@@ -127,8 +127,9 @@ async function main(): Promise<void> {
           `  ✓ Done: ${result.created} created, ${result.synced} updated, ${result.removed} removed`
         );
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error(`  ❌ Failed to sync ${repo}:`, errorMessage);
       results[repo] = { error: errorMessage };
     }
