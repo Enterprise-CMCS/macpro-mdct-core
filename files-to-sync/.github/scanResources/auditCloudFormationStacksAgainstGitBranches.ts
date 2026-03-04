@@ -77,7 +77,7 @@ async function main() {
 
   const repoEnding = repoName
     .replace(/^macpro-mdct-/, "")
-    .replace(/[^a-zA-Z]/g, "");
+    .replaceAll(/[^a-zA-Z]/g, "");
   const accountIdentifier = await getAccountIdentifier();
   const timestamp = new Date().toISOString().replaceAll(/[:.]/g, "-");
   const filename = `orphaned-stacks-${repoEnding}-${accountIdentifier}-${timestamp}.txt`;
