@@ -122,8 +122,8 @@ async function main(): Promise<void> {
     try {
       await syncRepo(repo);
       console.log(`Synced ${repo}`);
-    } catch (err) {
-      console.error(`Failed to sync ${repo}:`, err);
+    } catch (error) {
+      console.error(`Failed to sync ${repo}:`, error);
     }
   }
 }

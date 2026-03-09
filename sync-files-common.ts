@@ -52,7 +52,7 @@ export async function loadReposFromConfig(
   fullPath: boolean = false
 ): Promise<string[]> {
   const configPath = path.join(ROOT_DIR, "sync-files-repos.json");
-  const configData = await fs.readFile(configPath, "utf-8");
+  const configData = await fs.readFile(configPath, "utf8");
   const config: RepoConfig = JSON.parse(configData);
 
   if (fullPath) {
@@ -87,6 +87,6 @@ export async function getSyncHash(
 
 // Figure out if a file contains the disclaimer indicating it's managed by macpro-mdct-core
 export async function checkForDisclaimer(filePath: string): Promise<boolean> {
-  const content = await fs.readFile(filePath, "utf-8");
+  const content = await fs.readFile(filePath, "utf8");
   return content.includes("managed by macpro-mdct-core");
 }
