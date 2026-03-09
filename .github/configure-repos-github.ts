@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Octokit } from "@octokit/rest";
-import fs from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { loadReposFromConfig } from "../sync-files-common.ts";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -188,8 +188,8 @@ function arraysEqualIgnoringOrder(arr1, arr2) {
   if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
   if (arr1.length !== arr2.length) return false;
 
-  const stringify1 = arr1.map((item) => JSON.stringify(item)).sort();
-  const stringify2 = arr2.map((item) => JSON.stringify(item)).sort();
+  const stringify1 = arr1.map((item) => JSON.stringify(item)).toSorted();
+  const stringify2 = arr2.map((item) => JSON.stringify(item)).toSorted();
 
   return JSON.stringify(stringify1) === JSON.stringify(stringify2);
 }
@@ -639,7 +639,7 @@ async function configureRepo(repo, dryRun = true) {
 
   const timestamp = new Date()
     .toISOString()
-    .replace(/[:.]/g, "-")
+    .replaceAll(/[:.]/g, "-")
     .replace("T", "-")
     .replace("Z", "");
   const outputDir = path.join(SCRIPT_DIR, "config-snapshots");
