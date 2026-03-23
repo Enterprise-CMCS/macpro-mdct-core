@@ -10,17 +10,17 @@ jobs:
     if: github.event.pull_request.user.login != 'dependabot[bot]'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version-file: ".nvmrc"
       - name: Enable Corepack
         run: corepack enable
       - name: Setup Python for pre-commit
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.10"
       - name: install dependencies
@@ -28,7 +28,7 @@ jobs:
       - name: Configure pre-commit to skip irrelevant checks
         run: echo "SKIP=typescript-check" >> $GITHUB_ENV
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   assignAuthor:
     name: assignAuthor # Name needs to be unchanged to avoid updating branch rules
