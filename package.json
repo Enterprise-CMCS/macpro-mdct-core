@@ -1,19 +1,25 @@
 {
+  "private": true,
+  "workspaces": [
+    "files-to-sync/.github/scanResources",
+    "files-to-sync/cli",
+    "files-to-sync/services/topics"
+  ],
   "type": "module",
   "scripts": {
     "sync-local": "./sync-files-local.ts",
     "sync-github": "./sync-files-github.ts"
   },
   "devDependencies": {
-    "@aws-sdk/client-cloudformation": "^3.994.0",
-    "@aws-sdk/client-lambda": "^3.994.0",
-    "@aws-sdk/client-secrets-manager": "^3.994.0",
-    "@aws-sdk/client-sts": "^3.994.0",
+    "@aws-sdk/client-cloudformation": "~3.1012.0",
+    "@aws-sdk/client-lambda": "~3.1012.0",
+    "@aws-sdk/client-secrets-manager": "~3.1012.0",
+    "@aws-sdk/client-sts": "~3.1012.0",
     "@octokit/rest": "^22.0.0",
     "@types/node": "^22.19.2",
     "@types/yargs": "^17.0.35",
-    "aws-cdk-lib": "^2.185.0",
-    "constructs": "^10.3.0",
+    "aws-cdk-lib": "~2.243.0",
+    "constructs": "~10.5.0",
     "oxfmt": "^0.24.0",
     "oxlint": "^1.41.0",
     "simple-git": "^3.32.3",
