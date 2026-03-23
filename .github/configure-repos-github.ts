@@ -745,11 +745,23 @@ async function configureRepo(repo, dryRun = true) {
   }
 
   for (const autolink of autolinksToRemove) {
-    await deleteAutolink(owner, repoName, autolink.id, autolink.key_prefix, dryRun);
+    await deleteAutolink(
+      owner,
+      repoName,
+      autolink.id,
+      autolink.key_prefix,
+      dryRun
+    );
   }
 
   for (const { existing, desired } of autolinksToRecreate) {
-    await deleteAutolink(owner, repoName, existing.id, existing.key_prefix, dryRun);
+    await deleteAutolink(
+      owner,
+      repoName,
+      existing.id,
+      existing.key_prefix,
+      dryRun
+    );
     if (!dryRun) {
       await octokit.rest.repos.createAutolink({
         owner,
