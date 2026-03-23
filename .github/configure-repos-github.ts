@@ -77,6 +77,14 @@ async function getEnvironmentDetails(owner, repoName, environmentName) {
   }
 }
 
+async function getAutolinks(owner, repoName) {
+  const { data } = await octokit.rest.repos.listAutolinks({
+    owner,
+    repo: repoName,
+  });
+  return data;
+}
+
 const branchProtectionCache = new Map();
 
 async function getCurrentBranchProtection(owner, repoName, branch) {
@@ -289,6 +297,19 @@ async function deleteEnvironment(owner, repoName, environmentName, dryRun) {
   }
 }
 
+async function deleteAutolink(owner, repoName, autolinkId, keyPrefix, dryRun) {
+  if (dryRun) {
+    console.log(`  [DRY RUN] Would delete autolink: ${keyPrefix}`);
+  } else {
+    await octokit.rest.repos.deleteAutolink({
+      owner,
+      repo: repoName,
+      autolink_id: autolinkId,
+    });
+    console.log(`  Deleted autolink: ${keyPrefix}`);
+  }
+}
+
 function logList(label, items, prefix) {
   if (items.length > 0) {
     console.log(`${label}: ${items.length}`);
@@ -320,12 +341,14 @@ async function configureRepo(repo, dryRun = true) {
       ...baseConfig.environments,
       ...(baseConfig.overrides?.[repoName]?.environments || []),
     ],
+    autolinks: baseConfig.autolinks || [],
   };
 
   const currentConfig = {
     repoSettings: {},
     branchProtection: {},
     environments: [],
+    autolinks: [],
   };
 
   console.log("REPO SETTINGS");
@@ -636,6 +659,128 @@ async function configureRepo(repo, dryRun = true) {
       });
     }
   }
+
+  console.log("AUTOLINKS");
+  console.log("-".repeat(SEPARATOR_WIDTH));
+
+  const existingAutolinks = await getAutolinks(owner, repoName);
+  currentConfig.autolinks = existingAutolinks.map((a) => ({
+    key_prefix: a.key_prefix,
+    url_template: a.url_template,
+    is_alphanumeric: a.is_alphanumeric,
+  }));
+
+  const desiredAutolinks = config.autolinks;
+  const existingAutolinkPrefixes = existingAutolinks.map((a) => a.key_prefix);
+  const desiredAutolinkPrefixes = desiredAutolinks.map((a) => a.key_prefix);
+
+  logList("Current", existingAutolinkPrefixes, "-");
+  logList("Desired", desiredAutolinkPrefixes, "+");
+  console.log();
+
+  const existingAutolinkSet = new Set(existingAutolinkPrefixes);
+  const desiredAutolinkSet = new Set(desiredAutolinkPrefixes);
+
+  const autolinksToAdd = desiredAutolinks.filter(
+    (a) => !existingAutolinkSet.has(a.key_prefix)
+  );
+  const autolinksToCheck = desiredAutolinks.filter((a) =>
+    existingAutolinkSet.has(a.key_prefix)
+  );
+  const autolinksToRemove = existingAutolinks.filter(
+    (a) => !desiredAutolinkSet.has(a.key_prefix)
+  );
+
+  if (autolinksToAdd.length > 0) {
+    logList(
+      "Will create",
+      autolinksToAdd.map((a) => a.key_prefix),
+      "+"
+    );
+  }
+
+  const autolinksToRecreate = [];
+  const autolinksUpToDate = [];
+
+  for (const desired of autolinksToCheck) {
+    const existing = existingAutolinks.find(
+      (a) => a.key_prefix === desired.key_prefix
+    );
+    if (
+      existing.url_template !== desired.url_template ||
+      existing.is_alphanumeric !== desired.is_alphanumeric
+    ) {
+      autolinksToRecreate.push({ existing, desired });
+    } else {
+      autolinksUpToDate.push(desired.key_prefix);
+    }
+  }
+
+  if (autolinksToRecreate.length > 0) {
+    console.log(`Will recreate (${autolinksToRecreate.length}):`);
+    for (const { existing, desired } of autolinksToRecreate) {
+      if (existing.url_template !== desired.url_template) {
+        console.log(
+          `  ~ ${desired.key_prefix} url_template: ${JSON.stringify(existing.url_template)} -> ${JSON.stringify(desired.url_template)}`
+        );
+      }
+      if (existing.is_alphanumeric !== desired.is_alphanumeric) {
+        console.log(
+          `  ~ ${desired.key_prefix} is_alphanumeric: ${JSON.stringify(existing.is_alphanumeric)} -> ${JSON.stringify(desired.is_alphanumeric)}`
+        );
+      }
+    }
+  }
+
+  if (autolinksUpToDate.length > 0) {
+    logList("Already up to date", autolinksUpToDate, "=");
+  }
+
+  if (autolinksToRemove.length > 0) {
+    logList(
+      "Will delete",
+      autolinksToRemove.map((a) => a.key_prefix),
+      "-"
+    );
+  }
+
+  for (const autolink of autolinksToRemove) {
+    await deleteAutolink(owner, repoName, autolink.id, autolink.key_prefix, dryRun);
+  }
+
+  for (const { existing, desired } of autolinksToRecreate) {
+    await deleteAutolink(owner, repoName, existing.id, existing.key_prefix, dryRun);
+    if (!dryRun) {
+      await octokit.rest.repos.createAutolink({
+        owner,
+        repo: repoName,
+        key_prefix: desired.key_prefix,
+        url_template: desired.url_template,
+        is_alphanumeric: desired.is_alphanumeric,
+      });
+    }
+  }
+
+  for (const autolink of autolinksToAdd) {
+    if (!dryRun) {
+      await octokit.rest.repos.createAutolink({
+        owner,
+        repo: repoName,
+        key_prefix: autolink.key_prefix,
+        url_template: autolink.url_template,
+        is_alphanumeric: autolink.is_alphanumeric,
+      });
+    }
+  }
+
+  if (
+    autolinksToAdd.length === 0 &&
+    autolinksToRecreate.length === 0 &&
+    autolinksToRemove.length === 0
+  ) {
+    console.log("No changes needed");
+  }
+  console.log();
 
   const timestamp = new Date()
     .toISOString()
