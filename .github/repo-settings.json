@@ -2,6 +2,13 @@
   "repoSettings": {
     "delete_branch_on_merge": true
   },
+  "autolinks": [
+    {
+      "key_prefix": "CMDCT-",
+      "url_template": "https://jiraent.cms.gov/browse/CMDCT-<num>",
+      "is_alphanumeric": false
+    }
+  ],
   "branchProtection": {
     "main": {
       "required_status_checks": {
