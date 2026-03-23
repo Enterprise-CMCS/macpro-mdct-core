@@ -1,4 +1,10 @@
 {
+  "private": true,
+  "workspaces": [
+    "files-to-sync/.github/scanResources",
+    "files-to-sync/cli",
+    "files-to-sync/services/topics"
+  ],
   "type": "module",
   "scripts": {
     "sync-local": "./sync-files-local.ts",
