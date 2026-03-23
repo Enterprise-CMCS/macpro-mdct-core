@@ -1,9 +1,6 @@
 name: Configure Repositories
 
 on:
-  push:
-    branches:
-      - autolink-jira
   schedule:
     # Every Monday at 400 UTC
     - cron: "0 4 * * 1"
