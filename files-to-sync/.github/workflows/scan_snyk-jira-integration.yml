@@ -13,7 +13,6 @@ jobs:
   snyk_run:
     name: Snyk Run
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
     steps:
       - name: Check out repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
