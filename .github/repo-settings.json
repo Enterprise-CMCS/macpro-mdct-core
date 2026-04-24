@@ -166,6 +166,66 @@
     }
   ],
   "overrides": {
+    "macpro-mdct-seds": {
+      "branchProtection": {
+        "main": {
+          "required_status_checks": {
+            "checks": [
+              {
+                "context": "CodeQL",
+                "app_id": 57789
+              },
+              {
+                "context": "Analyze (javascript)",
+                "app_id": 15368
+              },
+              {
+                "context": "deploy",
+                "app_id": 15368
+              },
+              {
+                "context": "qlty check",
+                "app_id": 890766
+              },
+              {
+                "context": "qlty coverage",
+                "app_id": 890766
+              },
+              {
+                "context": "qlty coverage diff",
+                "app_id": 890766
+              },
+              {
+                "context": "prchecks",
+                "app_id": 15368
+              }
+            ]
+          }
+        },
+        "val": {
+          "required_status_checks": {
+            "checks": [
+              {
+                "context": "Analyze (javascript)",
+                "app_id": 15368
+              },
+              {
+                "context": "deploy",
+                "app_id": 15368
+              },
+              {
+                "context": "CodeQL",
+                "app_id": 57789
+              },
+              {
+                "context": "prchecks",
+                "app_id": 15368
+              }
+            ]
+          }
+        }
+      }
+    },
     "macpro-mdct-carts": {
       "branchProtection": {
         "skipci-archive-carts-v2": {
