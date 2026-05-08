@@ -22,7 +22,7 @@
     "constructs": "~10.5.0",
     "oxfmt": "^0.24.0",
     "oxlint": "^1.41.0",
-    "simple-git": "^3.32.3",
+    "simple-git": "^3.36.0",
     "typescript": "^5.9.3",
     "yargs": "^16.1.1"
   },
