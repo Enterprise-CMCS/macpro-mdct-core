@@ -4,13 +4,43 @@ import { Octokit } from "@octokit/rest";
 import { createActionAuth } from "@octokit/auth-action";
 import {
   CloudFormationClient,
-  ListStacksCommand,
   DeleteStackCommand,
+  DescribeStackEventsCommand,
+  ListStacksCommand,
 } from "@aws-sdk/client-cloudformation";
 import { setBranchName } from "./setBranchName.ts";
 
 const [owner, repo] = process.env.GITHUB_REPO!.split("/");
 const appName = process.env.APP_NAME_LOWER!;
+const deleteDelayMs = 1000;
+
+async function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getDeleteFailedMessage(
+  cfn: CloudFormationClient,
+  stackName: string
+): Promise<string> {
+  const response = await cfn.send(
+    new DescribeStackEventsCommand({ StackName: stackName })
+  );
+  const failedStackEvent = response.StackEvents?.find(
+    (event) =>
+      event.ResourceType === "AWS::CloudFormation::Stack" &&
+      event.LogicalResourceId === stackName &&
+      event.ResourceStatus === "DELETE_FAILED"
+  );
+
+  if (!failedStackEvent?.ResourceStatusReason) {
+    throw new Error(`Could not find DELETE_FAILED reason for ${stackName}`);
+  }
+
+  return [
+    `Stack: ${stackName}`,
+    `Previous DELETE_FAILED reason: ${failedStackEvent.ResourceStatusReason}`,
+  ].join("\n");
+}
 
 async function run() {
   const authentication = await createActionAuth()();
@@ -29,9 +59,21 @@ async function run() {
   const allAppStacks: string[] = [];
   const response = await cfn.send(
     new ListStacksCommand({
-      StackStatusFilter: ["CREATE_COMPLETE", "UPDATE_COMPLETE"],
+      StackStatusFilter: [
+        "CREATE_COMPLETE",
+        "UPDATE_COMPLETE",
+        "DELETE_FAILED",
+      ],
     })
   );
+  const deleteFailedStacks = response
+    .StackSummaries!.filter(
+      (stack) =>
+        stack.StackStatus === "DELETE_FAILED" &&
+        stack.StackName?.startsWith(`${appName}-`) &&
+        stack.StackName !== `${appName}-prerequisites`
+    )
+    .map((stack) => stack.StackName!);
   const appStacks = response
     .StackSummaries!.map((stack) => stack.StackName)
     .filter(
@@ -50,6 +92,11 @@ async function run() {
   console.log("=======================\n");
 
   for (const stack of deletableStacks) {
+    if (deleteFailedStacks.includes(stack)) {
+      const deleteFailedMessage = await getDeleteFailedMessage(cfn, stack);
+      console.log(deleteFailedMessage);
+    }
+    await wait(deleteDelayMs);
     await cfn.send(
       new DeleteStackCommand({
         StackName: stack,
