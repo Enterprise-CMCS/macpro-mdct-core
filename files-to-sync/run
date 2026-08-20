@@ -38,6 +38,8 @@ ARGS=()
 
 for arg in "$@"; do
     case $arg in
+        # On some systems, --update-env must be exact in order for the 
+        # flag to parse correctly based on the README instructions.
         update-env|--update-env)
             UPDATE_ENV=true
         ;;
