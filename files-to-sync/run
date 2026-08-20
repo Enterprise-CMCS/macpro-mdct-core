@@ -80,6 +80,7 @@ IMMUTABLE_FLAG=""
 yarn install $IMMUTABLE_FLAG >/dev/null 2>&1 || {
 echo "Dependency install failed" >&2; exit 1; }
 
+# If .env doesn't exist this needs to run before the CLI
 if [ "$UPDATE_ENV" = true ]; then
     echo "Running update-env..."
     ./cli/run.ts update-env
