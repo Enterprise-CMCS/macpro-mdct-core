@@ -7,6 +7,7 @@
     "Enterprise-CMCS/macpro-mdct-pasrr",
     "Enterprise-CMCS/macpro-mdct-qmr",
     "Enterprise-CMCS/macpro-mdct-rhtp",
-    "Enterprise-CMCS/macpro-mdct-seds"
+    "Enterprise-CMCS/macpro-mdct-seds",
+    "Enterprise-CMCS/macpro-mdct-datasets"
   ]
 }
