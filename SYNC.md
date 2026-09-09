@@ -9,7 +9,7 @@ The local sync script copies files directly to your local repo directories witho
 ### Quick Start
 
 ```bash
-# Sync to all 8 repos (carts, hcbs, mcr, mfp, pasrr, qmr, rhtp, seds)
+# Sync to all 9 repos (carts, hcbs, mcr, mfp, pasrr, qmr, rhtp, seds, datasets)
 yarn sync-local
 
 # Or directly with node
@@ -85,7 +85,8 @@ Edit `sync-files-repos.json` to control which repos receive automated PRs:
     "Enterprise-CMCS/macpro-mdct-pasrr",
     "Enterprise-CMCS/macpro-mdct-qmr",
     "Enterprise-CMCS/macpro-mdct-rhtp",
-    "Enterprise-CMCS/macpro-mdct-seds"
+    "Enterprise-CMCS/macpro-mdct-seds",
+    "Enterprise-CMCS/macpro-mdct-datasets"
   ]
 }
 ```
