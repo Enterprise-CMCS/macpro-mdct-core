@@ -1,7 +1,8 @@
 #!/usr/bin/env -S tsx
 import { EC2Client, paginateDescribeSecurityGroups } from "@aws-sdk/client-ec2";
-import { getUnprefixedStackNames, getResourceIdsOfType } from "../utils/stackInfo";
+import { getUnprefixedStackNames, getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new EC2Client({ region: "us-east-1" });
 
@@ -18,7 +19,7 @@ export async function audit () {
     allResourceIds: allSecurityGroups,
     managedResourceIds: [
       ...stackSpecificSecurityGroups,
-      ...await getResourceIdsOfType("AWS::EC2::SecurityGroup"),
+      ...await getResourceIds(ResourceTypes.SecurityGroup),
     ],
     ignoredSubstrings: [
       "cmscloud",

@@ -3,14 +3,15 @@ import {
   EC2Client,
   paginateDescribeNetworkInterfaces,
 } from "@aws-sdk/client-ec2";
-import { getResourceIdsOfType, getUnprefixedStackNames } from "../utils/stackInfo";
+import { getResourceIds, getUnprefixedStackNames } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new EC2Client({ region: "us-east-1" });
 
 export async function audit() {
   const label = "Network Interfaces (ENIs)";
-  const managedEnis = await getResourceIdsOfType("AWS::EC2::NetworkInterface");
+  const managedEnis = await getResourceIds(ResourceTypes.NetworkInterface);
   
   // Exclude ENIs that contain a CloudFormation stack name (treated as managed)
   const allNetworkInterfaces = await Array.fromAsync(getAllNetworkInterfaces());

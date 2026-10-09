@@ -3,8 +3,9 @@ import {
   CloudFrontClient,
   paginateListDistributions,
 } from "@aws-sdk/client-cloudfront";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
@@ -12,7 +13,7 @@ export async function audit() {
   const label = "CloudFront Distributions";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllDistributions()),
-    managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::Distribution"),
+    managedResourceIds: await getResourceIds(ResourceTypes.Distribution),
   });
   const deleteCommands = unmanagedIds.flatMap((id) => [
     `# Disable and delete distribution ${id}`,

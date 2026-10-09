@@ -1,7 +1,8 @@
 #!/usr/bin/env -S tsx
 import { IAMClient, paginateListRoles } from "@aws-sdk/client-iam";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new IAMClient({ region: "us-east-1" });
 
@@ -9,7 +10,7 @@ export async function audit () {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllIamRoles()),
-    managedResourceIds: await getResourceIdsOfType("AWS::IAM::Role"),
+    managedResourceIds: await getResourceIds(ResourceTypes.IamRole),
     ignoredPrefixes: ["seds", "qmr", "mcr", "mfp", "hcbs", "carts"],
   });
   const deleteCommands = unmanagedIds.flatMap((name) => [

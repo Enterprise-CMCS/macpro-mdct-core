@@ -4,8 +4,9 @@ import {
   paginateListKeys,
   DescribeKeyCommand,
 } from "@aws-sdk/client-kms";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new KMSClient({ region: "us-east-1" });
 
@@ -15,8 +16,8 @@ export async function audit () {
 
   // Treat KMS keys as managed if they're directly managed by CloudFormation
   // OR if they're referenced by a CloudFormation-managed KMS alias
-  const directlyManagedKeys = await getResourceIdsOfType("AWS::KMS::Key");
-  const cfManagedAliases = await getResourceIdsOfType("AWS::KMS::Alias");
+  const directlyManagedKeys = await getResourceIds(ResourceTypes.KmsKey);
+  const cfManagedAliases = await getResourceIds(ResourceTypes.KmsAlias);
   const keysFromAliases = (await Promise.all(cfManagedAliases.map(getKeyIdFromAlias)))
     .filter(Boolean);
 

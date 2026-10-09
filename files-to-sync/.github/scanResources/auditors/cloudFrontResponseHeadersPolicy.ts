@@ -1,8 +1,9 @@
 #!/usr/bin/env -S tsx
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { paginateListResponseHeadersPolicies } from "../utils/customPaginators/cloudfront";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
@@ -10,7 +11,7 @@ export async function audit() {
   const label = "CloudFront Custom Response Headers Policies";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllCustomResponseHeadersPolicies()),
-    managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::ResponseHeadersPolicy"),
+    managedResourceIds: await getResourceIds(ResourceTypes.ResponseHeadersPolicy),
   })
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-response-headers-policy --id ${id}`

@@ -1,8 +1,9 @@
 #!/usr/bin/env -S tsx
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { paginateListCachePolicies } from "../utils/customPaginators/cloudfront";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
@@ -10,7 +11,7 @@ export async function audit() {
   const label = "CloudFront Custom Cache Policies";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllCustomCachePolicies()),
-    managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::CachePolicy"),
+    managedResourceIds: await getResourceIds(ResourceTypes.CachePolicy),
   });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-cache-policy --id ${id}`

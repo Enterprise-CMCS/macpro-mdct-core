@@ -1,8 +1,9 @@
 #!/usr/bin/env -S tsx
 import { CloudWatchLogsClient, paginateDescribeLogGroups } from "@aws-sdk/client-cloudwatch-logs";
 import { APIGatewayClient, GetStagesCommand } from "@aws-sdk/client-api-gateway";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new CloudWatchLogsClient({ region: "us-east-1" });
 
@@ -11,8 +12,8 @@ export async function audit() {
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllLogGroups()),
     managedResourceIds: [
-      ...await getResourceIdsOfType("AWS::Logs::LogGroup"),
-      ...(await getResourceIdsOfType("AWS::Lambda::Function"))
+      ...await getResourceIds(ResourceTypes.LogGroup),
+      ...(await getResourceIds(ResourceTypes.LambdaFunction))
         .map((id) => `/aws/lambda/${id}`),
       ...(await Array.fromAsync(getAllStages()))
         .map(({ restApiId, stageName }) => `API-Gateway-Execution-Logs_${restApiId}/${stageName}`),
@@ -45,7 +46,7 @@ export async function audit() {
 
 async function* getAllStages() {
   const apiClient = new APIGatewayClient({ region: "us-east-1" });
-  const apiIds = await getResourceIdsOfType("AWS::ApiGateway::RestApi");
+  const apiIds = await getResourceIds(ResourceTypes.RestApi);
   for (let restApiId of apiIds) {
     const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
     const stageNames = stages.item!.map(s => s.stageName!).filter(Boolean);

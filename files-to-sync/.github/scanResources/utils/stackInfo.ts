@@ -3,28 +3,34 @@ import {
   CloudFormationClient,
   paginateListStackResources,
   paginateListStacks,
-  StackResourceSummary,
   StackStatus,
   StackSummary,
 } from "@aws-sdk/client-cloudformation";
+import { ResourceType, isResourceType } from "./types";
 
 const client = new CloudFormationClient({
   region: "us-east-1",
   maxAttempts: 10,
 });
-
 let cachedStacks: StackSummary[] | undefined;
+let cachedResourcesByType: Record<string, string[]> | undefined;
+
+/** Get all stacks not in a `DELETE_COMPLETE` state */
 export async function getAllStacks() {
   if (cachedStacks) return cachedStacks;
 
-  const NOT_DELETED = Object.values(StackStatus).filter((s) => s !== StackStatus.DELETE_COMPLETE);
-  const stacks = (await Array.fromAsync(
-    paginateListStacks({ client }, { StackStatusFilter: NOT_DELETED }),
-    (page) => page.StackSummaries!
-  )).flat()
+  async function* _fetchStacks() {
+    const input = {
+      StackStatusFilter: Object.values(StackStatus)
+        .filter((s) => s !== StackStatus.DELETE_COMPLETE)
+    };
+    for await (const page of paginateListStacks({ client }, input)) {
+      yield* page.StackSummaries!;
+    }
+  }
 
-  cachedStacks = stacks;
-  return stacks;
+  cachedStacks = await Array.fromAsync(_fetchStacks());
+  return cachedStacks;
 }
 
 /**
@@ -37,72 +43,49 @@ export async function getAllStacks() {
  * The same goes for security groups.
  */
 export async function getUnprefixedStackNames () {
-  const stackSummaries = await getAllStacks();
-  const projectPrefixRegex = /^(seds|qmr|mcr|mfp|hcbs|carts)-/i; // |app-api
-  return stackSummaries.map((stack) => {
-    if (!stack.StackName) {
+  function removePrefix (name: string | undefined) {
+    const projectPrefixRegex = /^(seds|qmr|mcr|mfp|hcbs|carts)-/i; // |app-api
+    if (!name) {
       return undefined;
     }
-    if (!projectPrefixRegex.test(stack.StackName)) {
-      return stack.StackName;
+    if (!projectPrefixRegex.test(name)) {
+      return name;
     }
-    const unprefixedName = stack.StackName.replace(projectPrefixRegex, "");
+    const unprefixedName = name.replace(projectPrefixRegex, "");
     if (unprefixedName.length <= 5) {
       return undefined;
     }
-    return unprefixedName;
-  })
-  .filter(Boolean)
-  .filter((name, i, arr) => i === arr.indexOf(name)) as string[];
-}
-
-const relevantTypes = [
-  "AWS::ApiGateway::RestApi",
-  "AWS::CloudFront::CachePolicy",
-  "AWS::CloudFront::Distribution",
-  "AWS::CloudFront::OriginAccessControl",
-  "AWS::CloudFront::ResponseHeadersPolicy",
-  "AWS::Cognito::IdentityPool",
-  "AWS::Cognito::UserPool",
-  "AWS::DynamoDB::Table",
-  "AWS::EC2::NetworkInterface",
-  "AWS::EC2::SecurityGroup",
-  "AWS::Events::Rule",
-  "AWS::IAM::ManagedPolicy",
-  "AWS::IAM::Policy",
-  "AWS::IAM::Role",
-  "AWS::KMS::Alias",
-  "AWS::KMS::Key",
-  "AWS::Lambda::Function",
-  "AWS::Lambda::LayerVersion",
-  "AWS::Logs::LogGroup",
-  "AWS::S3::Bucket",
-  "AWS::WAFv2::WebACL",
-] as const;
-type RelevantResourceType = typeof relevantTypes[number];
-function isRelevantType(x: unknown): x is RelevantResourceType {
-  return relevantTypes.includes(x as any);
-}
-
-let cachedResourcesByType: Record<string, string[]> | undefined;
-/** Map relevant resource types to a list of all resource IDs of that type */
-async function getRelevantResourceIdsByType() {
-  if (cachedResourcesByType) return cachedResourcesByType;
-  
-  const allResources: StackResourceSummary[] = [];
-  for (const { StackName } of await getAllStacks()) {
-    const resources = (await Array.fromAsync(
-      paginateListStackResources({ client }, { StackName }),
-      (page) => page.StackResourceSummaries!
-        .filter((r) => r.PhysicalResourceId && isRelevantType(r.ResourceType!))
-    )).flat();
-    
-    allResources.push(...resources);
+    return unprefixedName;    
   }
 
-  const groups = Object.groupBy(allResources, r => r.ResourceType!);
+  return (await getAllStacks())
+    .map((stack) => removePrefix(stack.StackName))
+    .filter(Boolean)
+    .filter((name, i, arr) => i === arr.indexOf(name)) as string[];
+}
+
+/**
+ * Get all resources, across all non-deleted stacks.
+ *
+ * Omit resources of non-audited types, and those with no physical ID.
+ */
+async function* getAllResources() {
+  for (const { StackName } of await getAllStacks()) {
+    for await (const page of paginateListStackResources({ client }, { StackName })) {
+      yield* page.StackResourceSummaries!
+        .filter((r) => r.PhysicalResourceId && isResourceType(r.ResourceType))
+    }
+  }
+}
+
+/** Map resource types to a list of IDs of resources of that type */
+async function getResourceIdsByType() {
+  if (cachedResourcesByType) return cachedResourcesByType;
+  
+  const allResources = await Array.fromAsync(getAllResources())
+  const resourcesByType = Object.groupBy(allResources, r => r.ResourceType!);
   const resourceIdsByType = Object.fromEntries(
-    Object.entries(groups).map(
+    Object.entries(resourcesByType).map(
       ([type, resources]) => [type, resources!.map(r => r.PhysicalResourceId!)]
     )
   );
@@ -111,25 +94,24 @@ async function getRelevantResourceIdsByType() {
   return resourceIdsByType;
 }
 
-/** Get relevant resource IDs for a specific type */
-export async function getResourceIdsOfType (type: string) {
-  // TODO is there a way to typecheck this parameter without blowing up the function signature?
-  if (!isRelevantType(type)) {
-    throw new Error(`Invalid resource type: '${type}'`);
+/**
+ * Get relevant resource IDs for a specific type.
+ *
+ * We know these are managed by CloudFormation because that's where we got them.
+ */
+export async function getResourceIds(type: ResourceType) {
+  if (!isResourceType(type)) {
+    throw new Error(`Unexpected resource type: '${type}'`);
   }
-  return (await getRelevantResourceIdsByType())[type] ?? [];
+
+  return (await getResourceIdsByType())[type] ?? [];
 }
 
-export async function getDeleteFailedStacks() {
-  const paginator = paginateListStacks({ client }, { StackStatusFilter: [StackStatus.DELETE_FAILED] });
-  const pages = await Array.fromAsync(paginator);
-  return pages.flatMap(page => page.StackSummaries?.map(s => s.StackName!) ?? []);
-}
-
+/** Generate the AWS CLI command to delete this stack */
 export function deleteStackCommand(stackName: string) {
   return `aws cloudformation delete-stack --stack-name "${stackName}" --region us-east-1`;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  console.log(await getRelevantResourceIdsByType());
+  console.log(await getResourceIdsByType());
 }

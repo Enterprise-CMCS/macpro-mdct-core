@@ -1,8 +1,8 @@
 #!/usr/bin/env -S tsx
 import { APIGatewayClient, paginateGetRestApis } from "@aws-sdk/client-api-gateway";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
-import { AuditFunction } from "../utils/types";
+import { ResourceTypes } from "../utils/types";
 
 const client = new APIGatewayClient({ region: "us-east-1" });
 
@@ -10,7 +10,7 @@ export async function audit() {
   const label = "API Gateway REST APIs";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllRestApis()),
-    managedResourceIds: await getResourceIdsOfType("AWS::ApiGateway::RestApi"),
+    managedResourceIds: await getResourceIds(ResourceTypes.RestApi),
   });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws apigateway delete-rest-api --rest-api-id ${id}`

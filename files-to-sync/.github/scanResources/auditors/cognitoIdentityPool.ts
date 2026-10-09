@@ -3,8 +3,9 @@ import {
   CognitoIdentityClient,
   paginateListIdentityPools,
 } from "@aws-sdk/client-cognito-identity";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new CognitoIdentityClient({ region: "us-east-1" });
 
@@ -12,7 +13,7 @@ export async function audit() {
   const label = "Cognito Identity Pools";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllIdentityPools()),
-    managedResourceIds: await getResourceIdsOfType("AWS::Cognito::IdentityPool"),
+    managedResourceIds: await getResourceIds(ResourceTypes.IdentityPool),
   });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cognito-identity delete-identity-pool --identity-pool-id ${id}`,

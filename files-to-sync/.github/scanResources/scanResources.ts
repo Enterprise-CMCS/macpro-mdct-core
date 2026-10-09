@@ -25,11 +25,13 @@ import * as wafWebACL from "./auditors/wafWebACL";
 
 let outputFile = "unmanaged-resources.txt";
 
+/** Log two places at once! Almost as if we invoked `| tee outputFile.txt` */
 function log(line: string = "") {
   console.log(line);
   fs.appendFileSync(outputFile, line + "\n");
 }
 
+/** Run the audit for each resource type, aggregating the output. */
 async function main() {
   const accountIdentifier = await getAccountIdentifier();
   outputFile = `unmanaged-resources-${accountIdentifier}.txt`;
@@ -65,7 +67,7 @@ async function main() {
     const result = await audit();
     if ("warning" in result) {
       log(`⚠️ ${result.warning}`);
-      return;
+      continue;
     }
 
     const { label, unmanagedIds, ignoreCounts, deleteCommands } = result;

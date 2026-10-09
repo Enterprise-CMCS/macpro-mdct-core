@@ -4,8 +4,9 @@ import {
   paginateListLayers,
   paginateListLayerVersions,
 } from "@aws-sdk/client-lambda";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new LambdaClient({ region: "us-east-1" });
 
@@ -13,7 +14,7 @@ export async function audit() {
   const label = "Lambda LayerVersions";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllLayerVersionArns()),
-    managedResourceIds: await getResourceIdsOfType("AWS::Lambda::LayerVersion"),
+    managedResourceIds: await getResourceIds(ResourceTypes.LambdaLayerVersion),
   });
   const deleteCommands = unmanagedIds.map((arn) => {
     const [layerName, layerVersion] = arn.split(":").slice(6);

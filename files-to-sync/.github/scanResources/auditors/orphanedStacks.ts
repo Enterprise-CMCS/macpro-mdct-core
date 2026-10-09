@@ -1,8 +1,13 @@
 #!/usr/bin/env -S tsx
-import * as cloudFormation from "../utils/stackInfo";
+import { deleteStackCommand, getAllStacks } from "../utils/stackInfo";
 import { Octokit } from "@octokit/rest";
 import { categorizeManagement } from "../utils/categorization";
 import { StackStatus } from "@aws-sdk/client-cloudformation";
+
+// This audit is unusual in that it deals with entire stacks,
+// rather than individual resource IDs.
+// But otherwise, it fits the AuditFunction pattern just fine.
+// The same goes for the deleteFailedStacks audit.
 
 export async function audit () {
   // Check for orphaned stacks (auto-detects in GitHub Actions or uses CLI arg)
@@ -39,7 +44,7 @@ export async function audit () {
           .map(project => `${project}-prerequisites`)
       ]
     });
-    const deleteCommands = unmanagedIds.map(cloudFormation.deleteStackCommand);
+    const deleteCommands = unmanagedIds.map(deleteStackCommand);
     return { label, unmanagedIds, ignoreCounts, deleteCommands };
   } catch (error: any) {
     return { warning: `⚠️ Failed to check orphaned stacks: ${error?.message || error}\n` };
@@ -58,7 +63,7 @@ export async function getRepoBranches(repoName: string) {
 }
 
 export async function getOrphanedStacks(repoName: string) {
-  const stackSummaries = await cloudFormation.getAllStacks();
+  const stackSummaries = await getAllStacks();
   const stacks = stackSummaries
     .filter(
       (s) =>

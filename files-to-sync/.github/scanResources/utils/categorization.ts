@@ -15,6 +15,9 @@ type CategorizationInfo = {
   ignoredSubstrings?: string[],
 }
 
+/**
+ * Which resources are unmanaged? How many are being ignored, for what reasons?
+ */
 export function categorizeManagement(info: CategorizationInfo) {
   const {
     allResourceIds,

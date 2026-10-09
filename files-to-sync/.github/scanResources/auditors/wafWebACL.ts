@@ -1,8 +1,9 @@
 #!/usr/bin/env -S tsx
 import { WAFV2Client, Scope as WafScope } from "@aws-sdk/client-wafv2";
-import { getResourceIdsOfType } from "../utils/stackInfo";
+import { getResourceIds } from "../utils/stackInfo";
 import { paginateListWebAcls } from "../utils/customPaginators/wafv2";
 import { categorizeManagement } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
 
 const client = new WAFV2Client({ region: "us-east-1" });
 
@@ -10,7 +11,7 @@ export async function audit() {
   const label = "WAFv2 WebACLs (REGIONAL & CLOUDFRONT)";
   const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllWafv2WebACLsCfnIds()),
-    managedResourceIds: await getResourceIdsOfType("AWS::WAFv2::WebACL"),
+    managedResourceIds: await getResourceIds(ResourceTypes.WebAcl),
     ignoredPrefixes: ["FMManagedWebACLV2-cms-cloud"],
   });
   const deleteCommands = unmanagedIds.map((id) => `aws wafv2 delete-web-acl --id ${id} --scope <REGIONAL|CLOUDFRONT> --lock-token <token>`);

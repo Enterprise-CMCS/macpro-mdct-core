@@ -1,6 +1,7 @@
 import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
 
+/** The ID of the AWS account making this request */
 export async function getAccountId() {
   try {
     return (await new STSClient().send(new GetCallerIdentityCommand())).Account;
