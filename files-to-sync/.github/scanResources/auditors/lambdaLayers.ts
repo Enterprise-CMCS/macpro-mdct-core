@@ -26,8 +26,9 @@ export async function audit() {
 async function* getAllLayerVersionArns() {
   for await (const layerPage of paginateListLayers({ client }, {})) {
     for (const { LayerName } of layerPage.Layers!) {
-      for await (const versionPage of paginateListLayerVersions({ client }, { LayerName })) {
-        yield* versionPage.LayerVersions!.map(v => v.LayerVersionArn!);
+      const versionPages = paginateListLayerVersions({ client }, { LayerName });
+      for await (const versionPage of versionPages) {
+        yield* versionPage.LayerVersions!.map((v) => v.LayerVersionArn!);
       }
     }
   }

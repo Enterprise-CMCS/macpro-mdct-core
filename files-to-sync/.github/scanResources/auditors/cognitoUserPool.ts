@@ -13,17 +13,18 @@ export async function audit() {
   const label = "Cognito User Pools";
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllUserPools()),
-    managedIds: await getResourceIds(ResourceTypes.UserPool)
+    managedIds: await getResourceIds(ResourceTypes.UserPool),
   });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cognito-idp delete-user-pool --user-pool-id ${id}`
-  )
+  );
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllUserPools() {
-  for await (const page of paginateListUserPools({ client }, { MaxResults: 60 })) {
-    yield* page.UserPools!.map(pool => pool.Id!)
+  const pages = paginateListUserPools({ client }, { MaxResults: 60 });
+  for await (const page of pages) {
+    yield* page.UserPools!.map((pool) => pool.Id!);
   }
 }
 

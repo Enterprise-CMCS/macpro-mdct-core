@@ -16,14 +16,15 @@ export async function audit() {
     managedIds: await getResourceIds(ResourceTypes.IdentityPool),
   });
   const deleteCommands = unmanagedIds.map(
-    (id) => `aws cognito-identity delete-identity-pool --identity-pool-id ${id}`,
+    (id) => `aws cognito-identity delete-identity-pool --identity-pool-id ${id}`
   );
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllIdentityPools() {
-  for await (const page of paginateListIdentityPools({ client }, { MaxResults: 60 })) {
-    yield* page.IdentityPools!.map(pool => pool.IdentityPoolId!)
+  const pages = paginateListIdentityPools({ client }, { MaxResults: 60 });
+  for await (const page of pages) {
+    yield* page.IdentityPools!.map((pool) => pool.IdentityPoolId!);
   }
 }
 

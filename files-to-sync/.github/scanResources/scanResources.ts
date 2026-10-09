@@ -58,7 +58,7 @@ async function main() {
     lambdaLayers.audit,
     s3Buckets.audit,
     securityGroup.audit,
-    wafWebACL.audit
+    wafWebACL.audit,
   ];
 
   const allDeleteCommands: string[] = [];
@@ -73,12 +73,12 @@ async function main() {
     const { label, unmanagedIds, ignoreCounts, deleteCommands } = result;
     const ignored = Object.values(ignoreCounts).reduce((sum, x) => sum + x, 0);
     const totalCount = unmanagedIds.length + ignored;
-    
+
     log(`${label} (total: ${totalCount})`);
     for (const [reason, count] of Object.entries(ignoreCounts)) {
       log(`${reason}: ${count}`);
     }
-    
+
     if (unmanagedIds.length === 0) {
       log("✅ All are managed by CloudFormation or safe to ignore.\n");
     } else {
@@ -91,14 +91,16 @@ async function main() {
       allDeleteCommands.push(
         `Delete ${label} (${unmanagedIds.length} resources)`,
         ...deleteCommands,
-        "",
+        ""
       );
     }
   }
 
   if (allDeleteCommands.length > 0) {
     const deleteScriptFile = outputFile.replace(".txt", "-delete-commands.txt");
-    fs.writeFileSync(deleteScriptFile, [
+    fs.writeFileSync(
+      deleteScriptFile,
+      [
         "# AWS CLI commands to delete unmanaged resources",
         "# Generated: " + new Date().toISOString(),
         "",
@@ -109,7 +111,9 @@ async function main() {
         "4. Remove the '#' prefix from each command before executing",
         "",
         // Comment all nonempty lines to prevent bulk execution of commands
-        ...allDeleteCommands.map(line => line.length > 0 ? `# ${line}` : line),
+        ...allDeleteCommands.map((line) =>
+          line.length > 0 ? `# ${line}` : line
+        ),
       ].join("\n")
     );
 

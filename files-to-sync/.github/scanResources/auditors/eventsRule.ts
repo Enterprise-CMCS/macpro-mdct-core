@@ -7,7 +7,7 @@ import { ResourceTypes } from "../utils/types";
 
 const client = new EventBridgeClient({ region: "us-east-1" });
 
-export async function audit () {
+export async function audit() {
   const label = "Event Rules";
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllEventRules()),
@@ -31,8 +31,9 @@ export async function audit () {
 }
 
 export async function* getAllEventRules() {
-  for await (const page of paginateListRulesCommand({ client }, { Limit: 100 })) {
-    yield* page.Rules!.map(rule => rule.Name!)
+  const pages = paginateListRulesCommand({ client }, { Limit: 100 });
+  for await (const page of pages) {
+    yield* page.Rules!.map((rule) => rule.Name!);
   }
 }
 

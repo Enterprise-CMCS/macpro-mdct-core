@@ -1,5 +1,8 @@
 #!/usr/bin/env -S tsx
-import { APIGatewayClient, paginateGetRestApis } from "@aws-sdk/client-api-gateway";
+import {
+  APIGatewayClient,
+  paginateGetRestApis,
+} from "@aws-sdk/client-api-gateway";
 import { getResourceIds } from "../utils/stackInfo";
 import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
@@ -20,7 +23,7 @@ export async function audit() {
 
 async function* getAllRestApis() {
   for await (const page of paginateGetRestApis({ client }, { limit: 500 })) {
-    yield* page.items!.map(api => api.id!);
+    yield* page.items!.map((api) => api.id!);
   }
 }
 

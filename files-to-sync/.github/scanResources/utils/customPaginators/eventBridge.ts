@@ -1,7 +1,7 @@
 import {
   EventBridgeClient,
   ListRulesCommand,
-  ListRulesCommandInput
+  ListRulesCommandInput,
 } from "@aws-sdk/client-eventbridge";
 
 export async function* paginateListRulesCommand(
@@ -10,7 +10,9 @@ export async function* paginateListRulesCommand(
 ) {
   let NextToken: string | undefined;
   do {
-    const response = await client.send(new ListRulesCommand({ ...input, NextToken }));
+    const response = await client.send(
+      new ListRulesCommand({ ...input, NextToken })
+    );
     yield response;
     NextToken = response.NextToken;
   } while (NextToken);

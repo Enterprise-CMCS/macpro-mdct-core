@@ -21,8 +21,9 @@ export async function getAllStacks() {
 
   async function* _fetchStacks() {
     const input = {
-      StackStatusFilter: Object.values(StackStatus)
-        .filter((s) => s !== StackStatus.DELETE_COMPLETE)
+      StackStatusFilter: Object.values(StackStatus).filter(
+        (s) => s !== StackStatus.DELETE_COMPLETE
+      ),
     };
     for await (const page of paginateListStacks({ client }, input)) {
       yield* page.StackSummaries!;
@@ -42,8 +43,8 @@ export async function getAllStacks() {
  * but ENI descriptions just have the suffix (ex: `"x8e03cb1432"`).
  * The same goes for security groups.
  */
-export async function getUnprefixedStackNames () {
-  function removePrefix (name: string | undefined) {
+export async function getUnprefixedStackNames() {
+  function removePrefix(name: string | undefined) {
     const projectPrefixRegex = /^(seds|qmr|mcr|mfp|hcbs|carts)-/i; // |app-api
     if (!name) {
       return undefined;
@@ -55,7 +56,7 @@ export async function getUnprefixedStackNames () {
     if (unprefixedName.length <= 5) {
       return undefined;
     }
-    return unprefixedName;    
+    return unprefixedName;
   }
 
   return (await getAllStacks())
@@ -71,9 +72,11 @@ export async function getUnprefixedStackNames () {
  */
 async function* getAllResources() {
   for (const { StackName } of await getAllStacks()) {
-    for await (const page of paginateListStackResources({ client }, { StackName })) {
-      yield* page.StackResourceSummaries!
-        .filter((r) => r.PhysicalResourceId && isResourceType(r.ResourceType))
+    const pages = paginateListStackResources({ client }, { StackName });
+    for await (const page of pages) {
+      yield* page.StackResourceSummaries!.filter(
+        (r) => r.PhysicalResourceId && isResourceType(r.ResourceType)
+      );
     }
   }
 }
@@ -81,13 +84,14 @@ async function* getAllResources() {
 /** Map resource types to a list of IDs of resources of that type */
 async function getResourceIdsByType() {
   if (cachedResourcesByType) return cachedResourcesByType;
-  
-  const allResources = await Array.fromAsync(getAllResources())
-  const resourcesByType = Object.groupBy(allResources, r => r.ResourceType!);
+
+  const allResources = await Array.fromAsync(getAllResources());
+  const resourcesByType = Object.groupBy(allResources, (r) => r.ResourceType!);
   const resourceIdsByType = Object.fromEntries(
-    Object.entries(resourcesByType).map(
-      ([type, resources]) => [type, resources!.map(r => r.PhysicalResourceId!)]
-    )
+    Object.entries(resourcesByType).map(([type, resources]) => [
+      type,
+      resources!.map((r) => r.PhysicalResourceId!),
+    ])
   );
 
   cachedResourcesByType = resourceIdsByType;

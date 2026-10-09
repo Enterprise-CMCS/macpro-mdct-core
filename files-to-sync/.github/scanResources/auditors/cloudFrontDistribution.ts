@@ -27,7 +27,7 @@ export async function audit() {
 
 async function* getAllDistributions() {
   for await (const page of paginateListDistributions({ client }, {})) {
-    yield* page.DistributionList!.Items!.map(dist => dist.Id!);
+    yield* page.DistributionList!.Items!.map((dist) => dist.Id!);
   }
 }
 

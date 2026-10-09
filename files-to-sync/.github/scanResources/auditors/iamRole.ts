@@ -6,7 +6,7 @@ import { ResourceTypes } from "../utils/types";
 
 const client = new IAMClient({ region: "us-east-1" });
 
-export async function audit () {
+export async function audit() {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllIamRoles()),
@@ -24,7 +24,7 @@ export async function audit () {
 
 export async function* getAllIamRoles() {
   for await (const page of paginateListRoles({ client }, { MaxItems: 1000 })) {
-    yield* page.Roles!.map(role => role.RoleName!)
+    yield* page.Roles!.map((role) => role.RoleName!);
   }
 }
 

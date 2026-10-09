@@ -21,7 +21,7 @@ export async function audit() {
 
 export async function* getAllTableNames() {
   for await (const page of paginateListTables({ client }, { Limit: 100 })) {
-    yield* page.TableNames!
+    yield* page.TableNames!;
   }
 }
 

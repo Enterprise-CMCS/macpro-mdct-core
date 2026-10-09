@@ -21,9 +21,9 @@ export async function audit() {
 
 async function* getAllCustomCachePolicies() {
   for await (const page of paginateListCachePolicies({ client }, {})) {
-    yield* page.CachePolicyList!.Items!
-      .filter(policy => policy.Type === "custom")
-      .map(policy => policy.CachePolicy!.Id!);
+    yield* page
+      .CachePolicyList!.Items!.filter((policy) => policy.Type === "custom")
+      .map((policy) => policy.CachePolicy!.Id!);
   }
 }
 

@@ -1,6 +1,12 @@
 #!/usr/bin/env -S tsx
-import { CloudWatchLogsClient, paginateDescribeLogGroups } from "@aws-sdk/client-cloudwatch-logs";
-import { APIGatewayClient, GetStagesCommand } from "@aws-sdk/client-api-gateway";
+import {
+  CloudWatchLogsClient,
+  paginateDescribeLogGroups,
+} from "@aws-sdk/client-cloudwatch-logs";
+import {
+  APIGatewayClient,
+  GetStagesCommand,
+} from "@aws-sdk/client-api-gateway";
 import { getResourceIds } from "../utils/stackInfo";
 import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
@@ -12,11 +18,14 @@ export async function audit() {
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllLogGroups()),
     managedIds: [
-      ...await getResourceIds(ResourceTypes.LogGroup),
-      ...(await getResourceIds(ResourceTypes.LambdaFunction))
-        .map((id) => `/aws/lambda/${id}`),
-      ...(await Array.fromAsync(getAllStages()))
-        .map(({ restApiId, stageName }) => `API-Gateway-Execution-Logs_${restApiId}/${stageName}`),
+      ...(await getResourceIds(ResourceTypes.LogGroup)),
+      ...(await getResourceIds(ResourceTypes.LambdaFunction)).map(
+        (id) => `/aws/lambda/${id}`
+      ),
+      ...(await Array.fromAsync(getAllStages())).map(
+        ({ restApiId, stageName }) =>
+          `API-Gateway-Execution-Logs_${restApiId}/${stageName}`
+      ),
     ],
     ignoredPrefixes: [
       "/aws/ec2",
@@ -40,7 +49,7 @@ export async function audit() {
   const deleteCommands = unmanagedIds.map(
     (id) => `aws logs delete-log-group --log-group-name ${id}`
   );
-  
+
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
@@ -49,14 +58,14 @@ async function* getAllStages() {
   const apiIds = await getResourceIds(ResourceTypes.RestApi);
   for (let restApiId of apiIds) {
     const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
-    const stageNames = stages.item!.map(s => s.stageName!).filter(Boolean);
-    yield* stageNames.map(stageName => ({ restApiId, stageName }));
+    const stageNames = stages.item!.map((s) => s.stageName!).filter(Boolean);
+    yield* stageNames.map((stageName) => ({ restApiId, stageName }));
   }
 }
 
 async function* getAllLogGroups() {
   for await (const page of paginateDescribeLogGroups({ client }, {})) {
-    yield* page.logGroups!.map(group => group.logGroupName!);
+    yield* page.logGroups!.map((group) => group.logGroupName!);
   }
 }
 

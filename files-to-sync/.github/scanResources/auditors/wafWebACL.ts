@@ -14,14 +14,17 @@ export async function audit() {
     managedIds: await getResourceIds(ResourceTypes.WebAcl),
     ignoredPrefixes: ["FMManagedWebACLV2-cms-cloud"],
   });
-  const deleteCommands = unmanagedIds.map((id) => `aws wafv2 delete-web-acl --id ${id} --scope <REGIONAL|CLOUDFRONT> --lock-token <token>`);
+  const deleteCommands = unmanagedIds.map(
+    (id) =>
+      `aws wafv2 delete-web-acl --id ${id} --scope <REGIONAL|CLOUDFRONT> --lock-token <token>`
+  );
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllWafv2WebACLsCfnIds() {
   for (const Scope of [WafScope.REGIONAL, WafScope.CLOUDFRONT]) {
     for await (const page of paginateListWebAcls({ client }, { Scope })) {
-      yield* page.WebACLs!.map(w => `${w.Name}|${w.Id}|${Scope}`)
+      yield* page.WebACLs!.map((w) => `${w.Name}|${w.Id}|${Scope}`);
     }
   }
 }

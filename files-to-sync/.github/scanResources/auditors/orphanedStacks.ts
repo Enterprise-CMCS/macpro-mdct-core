@@ -9,7 +9,7 @@ import { StackStatus } from "@aws-sdk/client-cloudformation";
 // But otherwise, it fits the AuditFunction pattern just fine.
 // The same goes for the deleteFailedStacks audit.
 
-export async function audit () {
+export async function audit() {
   // Check for orphaned stacks (auto-detects in GitHub Actions or uses CLI arg)
   let repoName = process.argv[2];
   if (!repoName && process.env.GITHUB_REPOSITORY) {
@@ -17,13 +17,15 @@ export async function audit () {
     repoName = process.env.GITHUB_REPOSITORY.split("/")[1];
   }
   if (!repoName) {
-    return { warning: "Could not check Orphaned Stacks: Cannot determine repo name."};
+    return {
+      warning: "Could not check Orphaned Stacks: Cannot determine repo name.",
+    };
   }
 
   try {
     const label = `CloudFormation Orphaned Stacks (No Matching Git Branch in ${repoName})`;
     const { unmanagedIds, ignoreCounts } = classifyResources({
-      allResourceIds: (await getOrphanedStacks(repoName)).map(s => s.name),
+      allResourceIds: (await getOrphanedStacks(repoName)).map((s) => s.name),
       managedIds: [],
       ignoredPrefixes: [
         "CMS-Cloud",
@@ -40,14 +42,17 @@ export async function audit () {
         "cbj-delete-snapshot",
         "smtp-ado-postfix-relay",
         "Wiz-Integration-Role",
-        ...["seds", "qmr", "mcr", "mfp", "hcbs", "carts"]
-          .map(project => `${project}-prerequisites`)
-      ]
+        ...["seds", "qmr", "mcr", "mfp", "hcbs", "carts"].map(
+          (project) => `${project}-prerequisites`
+        ),
+      ],
     });
     const deleteCommands = unmanagedIds.map(deleteStackCommand);
     return { label, unmanagedIds, ignoreCounts, deleteCommands };
   } catch (error: any) {
-    return { warning: `⚠️ Failed to check orphaned stacks: ${error?.message || error}\n` };
+    return {
+      warning: `⚠️ Failed to check orphaned stacks: ${error?.message || error}\n`,
+    };
   }
 }
 
@@ -55,11 +60,9 @@ export async function getRepoBranches(repoName: string) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error("GITHUB_TOKEN not set");
   const octokit = new Octokit({ auth: token });
-  const branches = await octokit.paginate(
-    octokit.repos.listBranches,
-    { owner: "Enterprise-CMCS", repo: repoName }
-  );
-  return branches.map(branch => branch.name);
+  const options = { owner: "Enterprise-CMCS", repo: repoName };
+  const branches = await octokit.paginate(octokit.repos.listBranches, options);
+  return branches.map((branch) => branch.name);
 }
 
 export async function getOrphanedStacks(repoName: string) {

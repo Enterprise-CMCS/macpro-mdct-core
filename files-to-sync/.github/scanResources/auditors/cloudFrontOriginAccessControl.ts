@@ -14,7 +14,7 @@ export async function audit() {
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllOriginAccessControls()),
     managedIds: await getResourceIds(ResourceTypes.OriginAccessControl),
-  })
+  });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-origin-access-control --id ${id}`
   );
@@ -23,7 +23,7 @@ export async function audit() {
 
 async function* getAllOriginAccessControls() {
   for await (const page of paginateListOriginAccessControls({ client }, {})) {
-    yield* page.OriginAccessControlList!.Items!.map(item => item.Id!)
+    yield* page.OriginAccessControlList!.Items!.map((item) => item.Id!);
   }
 }
 

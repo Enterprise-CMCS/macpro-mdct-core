@@ -7,7 +7,7 @@ import { ResourceTypes } from "../utils/types";
 
 const client = new S3Client({ region: "us-east-1" });
 
-export async function audit () {
+export async function audit() {
   const label = "S3 Buckets";
   const accountId = await getAccountId();
   const { unmanagedIds, ignoreCounts } = classifyResources({
@@ -21,8 +21,8 @@ export async function audit () {
       ...(accountId ? [accountId] : []),
     ],
   });
-  
-  // commented out, since deleting a nonempty bucket is ESPECIALLY destructive.
+
+  // Commented out, since deleting a nonempty bucket is ESPECIALLY destructive.
   // const deleteCommands = unmanagedIds.map(bucketId =>
   //   `aws s3 rb s3://${bucketId} --force  # WARNING: Deletes all objects!`,
   // );
@@ -33,7 +33,7 @@ export async function audit () {
 
 export async function* getAllS3Buckets() {
   for await (const page of paginateListBuckets({ client }, {})) {
-    yield* page.Buckets!.map(bucket => bucket.Name!)
+    yield* page.Buckets!.map((bucket) => bucket.Name!);
   }
 }
 

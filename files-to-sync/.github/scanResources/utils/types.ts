@@ -1,19 +1,21 @@
-type AuditResult = {
-  /** A human-readable name for this resource type. */
-  label: string;
+type AuditResult =
+  | {
+      /** A human-readable name for this resource type. */
+      label: string;
 
-  /** The list of unmanaged resource IDs of this type */
-  unmanagedIds: string[];
+      /** The list of unmanaged resource IDs of this type */
+      unmanagedIds: string[];
 
-  /** How many existing resources were managed or ignored, for what reasons? */
-  ignoreCounts: Record<string, number>;
+      /** How many existing resources were managed or ignored, for what reasons? */
+      ignoreCounts: Record<string, number>;
 
-  /** The necessary AWS CLI commands to delete the unmanaged resources */
-  deleteCommands: string[];
-} | {
-  /** A message explaining why the audit was not performed */
-  warning: string
-};
+      /** The necessary AWS CLI commands to delete the unmanaged resources */
+      deleteCommands: string[];
+    }
+  | {
+      /** A message explaining why the audit was not performed */
+      warning: string;
+    };
 
 export type AuditFunction = () => Promise<AuditResult>;
 
@@ -40,9 +42,9 @@ export const ResourceTypes = {
   LogGroup: "AWS::Logs::LogGroup",
   S3Bucket: "AWS::S3::Bucket",
   WebAcl: "AWS::WAFv2::WebACL",
- } as const;
+} as const;
 
-export type ResourceType = typeof ResourceTypes[keyof typeof ResourceTypes];
+export type ResourceType = (typeof ResourceTypes)[keyof typeof ResourceTypes];
 
 export function isResourceType(x: unknown): x is ResourceType {
   return Object.values(ResourceTypes).includes(x as any);

@@ -12,7 +12,7 @@ export async function audit() {
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getCustomResponseHeadersPolicies()),
     managedIds: await getResourceIds(ResourceTypes.ResponseHeadersPolicy),
-  })
+  });
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-response-headers-policy --id ${id}`
   );
@@ -20,10 +20,13 @@ export async function audit() {
 }
 
 async function* getCustomResponseHeadersPolicies() {
-  for await (const page of paginateListResponseHeadersPolicies({ client }, {})) {
-    yield* page.ResponseHeadersPolicyList!.Items!
-      .filter(item => item.Type === "custom")
-      .map(item => item.ResponseHeadersPolicy!.Id!);
+  const pages = paginateListResponseHeadersPolicies({ client }, {});
+  for await (const page of pages) {
+    yield* page
+      .ResponseHeadersPolicyList!.Items!.filter(
+        (item) => item.Type === "custom"
+      )
+      .map((item) => item.ResponseHeadersPolicy!.Id!);
   }
 }
 

@@ -16,7 +16,7 @@ const client = new CloudFormationClient({
   maxAttempts: 10,
 });
 
-export async function audit () {
+export async function audit() {
   const label = "CloudFormation Stacks in DELETE_FAILED State";
   const unmanagedIds = await Array.fromAsync(getDeleteFailedStacks());
   const deleteCommands = unmanagedIds.map(deleteStackCommand);
@@ -25,13 +25,13 @@ export async function audit () {
     unmanagedIds,
     ignoreCounts: {},
     deleteCommands,
-  }
+  };
 }
 
 /** Get all stacks in a `DELETE_FAILED` state */
 export async function* getDeleteFailedStacks() {
   const input = { StackStatusFilter: [StackStatus.DELETE_FAILED] };
   for await (const page of paginateListStacks({ client }, input)) {
-    yield* (page.StackSummaries ?? []).map(s => s.StackName!)
+    yield* (page.StackSummaries ?? []).map((s) => s.StackName!);
   }
 }

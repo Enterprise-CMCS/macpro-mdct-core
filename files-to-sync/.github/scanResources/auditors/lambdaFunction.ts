@@ -12,13 +12,15 @@ export async function audit() {
     allResourceIds: await Array.fromAsync(getAllLambdaFunctions()),
     managedIds: await getResourceIds(ResourceTypes.LambdaFunction),
   });
-  const deleteCommands = unmanagedIds.map((name) => `aws lambda delete-function --function-name ${name}`);
+  const deleteCommands = unmanagedIds.map(
+    (name) => `aws lambda delete-function --function-name ${name}`
+  );
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllLambdaFunctions() {
   for await (const page of paginateListFunctions({ client }, {})) {
-    yield* page.Functions!.map(func => func.FunctionName!)
+    yield* page.Functions!.map((func) => func.FunctionName!);
   }
 }
 
