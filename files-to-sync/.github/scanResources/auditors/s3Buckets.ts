@@ -1,7 +1,7 @@
 #!/usr/bin/env -S tsx
 import { S3Client, paginateListBuckets } from "@aws-sdk/client-s3";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { getAccountId } from "../utils/identity";
 import { ResourceTypes } from "../utils/types";
 
@@ -10,9 +10,9 @@ const client = new S3Client({ region: "us-east-1" });
 export async function audit () {
   const label = "S3 Buckets";
   const accountId = await getAccountId();
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllS3Buckets()),
-    managedResourceIds: await getResourceIds(ResourceTypes.S3Bucket),
+    managedIds: await getResourceIds(ResourceTypes.S3Bucket),
     ignoredSubstrings: [
       "prod",
       "us-west-2",

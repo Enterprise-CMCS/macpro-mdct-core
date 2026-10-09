@@ -4,7 +4,7 @@ import {
   paginateDescribeNetworkInterfaces,
 } from "@aws-sdk/client-ec2";
 import { getResourceIds, getUnprefixedStackNames } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new EC2Client({ region: "us-east-1" });
@@ -19,9 +19,9 @@ export async function audit() {
   const stackSpecificEnis = allNetworkInterfaces
     .filter((eni) => stackNames.some(name => eni.includes(name)));
 
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: allNetworkInterfaces,
-    managedResourceIds: [...managedEnis, ...stackSpecificEnis],
+    managedIds: [...managedEnis, ...stackSpecificEnis],
     ignoredSubstrings: [
       "main",
       "master",

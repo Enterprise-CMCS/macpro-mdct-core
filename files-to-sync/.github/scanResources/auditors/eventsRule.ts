@@ -2,16 +2,16 @@
 import { EventBridgeClient } from "@aws-sdk/client-eventbridge";
 import { getResourceIds } from "../utils/stackInfo";
 import { paginateListRulesCommand } from "../utils/customPaginators/eventBridge";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new EventBridgeClient({ region: "us-east-1" });
 
 export async function audit () {
   const label = "Event Rules";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllEventRules()),
-    managedResourceIds: await getResourceIds(ResourceTypes.EventsRule),
+    managedIds: await getResourceIds(ResourceTypes.EventsRule),
     ignoredPrefixes: [
       "SSMExplorerManagedRule",
       "billing-alerts",

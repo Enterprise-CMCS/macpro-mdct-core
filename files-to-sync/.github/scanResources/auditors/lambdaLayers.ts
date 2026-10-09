@@ -5,16 +5,16 @@ import {
   paginateListLayerVersions,
 } from "@aws-sdk/client-lambda";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new LambdaClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "Lambda LayerVersions";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllLayerVersionArns()),
-    managedResourceIds: await getResourceIds(ResourceTypes.LambdaLayerVersion),
+    managedIds: await getResourceIds(ResourceTypes.LambdaLayerVersion),
   });
   const deleteCommands = unmanagedIds.map((arn) => {
     const [layerName, layerVersion] = arn.split(":").slice(6);

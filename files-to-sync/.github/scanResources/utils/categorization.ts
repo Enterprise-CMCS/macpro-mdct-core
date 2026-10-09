@@ -3,7 +3,7 @@ type CategorizationInfo = {
   allResourceIds: string[],
   
   /** These resources are managed by CloudFormation, and will be ignored. */
-  managedResourceIds: string[],
+  managedIds: string[],
   
   /** If a resource ID begins with any of these, it will be ignored. */
   ignoredPrefixes?: string[],
@@ -18,10 +18,10 @@ type CategorizationInfo = {
 /**
  * Which resources are unmanaged? How many are being ignored, for what reasons?
  */
-export function categorizeManagement(info: CategorizationInfo) {
+export function classifyResources(info: CategorizationInfo) {
   const {
     allResourceIds,
-    managedResourceIds,
+    managedIds,
     ignoredPrefixes,
     ignoredIds,
     ignoredSubstrings,
@@ -29,7 +29,7 @@ export function categorizeManagement(info: CategorizationInfo) {
   const UNMANAGED = "Unmanaged";
 
   function getIgnoreReason (id: string) {
-    if (managedResourceIds.includes(id)) {
+    if (managedIds.includes(id)) {
       return "Managed by CloudFormation";
     }
 

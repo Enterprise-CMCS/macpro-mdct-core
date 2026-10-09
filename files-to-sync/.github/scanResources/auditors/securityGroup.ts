@@ -1,7 +1,7 @@
 #!/usr/bin/env -S tsx
 import { EC2Client, paginateDescribeSecurityGroups } from "@aws-sdk/client-ec2";
 import { getUnprefixedStackNames, getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new EC2Client({ region: "us-east-1" });
@@ -15,9 +15,9 @@ export async function audit () {
   const stackSpecificSecurityGroups = allSecurityGroups
     .filter((sg) => stackNames.some(name => sg.includes(name)))
 
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: allSecurityGroups,
-    managedResourceIds: [
+    managedIds: [
       ...stackSpecificSecurityGroups,
       ...await getResourceIds(ResourceTypes.SecurityGroup),
     ],

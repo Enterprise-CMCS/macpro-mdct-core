@@ -1,16 +1,16 @@
 #!/usr/bin/env -S tsx
 import { IAMClient, paginateListRoles } from "@aws-sdk/client-iam";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new IAMClient({ region: "us-east-1" });
 
 export async function audit () {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllIamRoles()),
-    managedResourceIds: await getResourceIds(ResourceTypes.IamRole),
+    managedIds: await getResourceIds(ResourceTypes.IamRole),
     ignoredPrefixes: ["seds", "qmr", "mcr", "mfp", "hcbs", "carts"],
   });
   const deleteCommands = unmanagedIds.flatMap((name) => [

@@ -5,7 +5,7 @@ import {
   DescribeKeyCommand,
 } from "@aws-sdk/client-kms";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new KMSClient({ region: "us-east-1" });
@@ -24,9 +24,9 @@ export async function audit () {
   // Combine both types - these are just key IDs
   const managedKeyIds = new Set([...directlyManagedKeys, ...keysFromAliases]);
 
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: allKmsKeys,
-    managedResourceIds: allKmsKeys.filter((keyDetail) => {
+    managedIds: allKmsKeys.filter((keyDetail) => {
       // For matching, we need to check if the key ID (before " - ") is in the managed set
       const keyId = keyDetail.split(" - ")[0];
       return managedKeyIds.has(keyId);

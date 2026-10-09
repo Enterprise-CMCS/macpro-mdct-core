@@ -2,16 +2,16 @@
 import { CloudWatchLogsClient, paginateDescribeLogGroups } from "@aws-sdk/client-cloudwatch-logs";
 import { APIGatewayClient, GetStagesCommand } from "@aws-sdk/client-api-gateway";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new CloudWatchLogsClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "CloudWatch Log Groups";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllLogGroups()),
-    managedResourceIds: [
+    managedIds: [
       ...await getResourceIds(ResourceTypes.LogGroup),
       ...(await getResourceIds(ResourceTypes.LambdaFunction))
         .map((id) => `/aws/lambda/${id}`),

@@ -4,16 +4,16 @@ import {
   paginateListOriginAccessControls,
 } from "@aws-sdk/client-cloudfront";
 import { getResourceIds } from "../utils/stackInfo";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "CloudFront Origin Access Controls";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: await Array.fromAsync(getAllOriginAccessControls()),
-    managedResourceIds: await getResourceIds(ResourceTypes.OriginAccessControl),
+    managedIds: await getResourceIds(ResourceTypes.OriginAccessControl),
   })
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-origin-access-control --id ${id}`

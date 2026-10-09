@@ -2,16 +2,16 @@
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
 import { getResourceIds } from "../utils/stackInfo";
 import { paginateListResponseHeadersPolicies } from "../utils/customPaginators/cloudfront";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "CloudFront Custom Response Headers Policies";
-  const { unmanagedIds, ignoreCounts } = categorizeManagement({
-    allResourceIds: await Array.fromAsync(getAllCustomResponseHeadersPolicies()),
-    managedResourceIds: await getResourceIds(ResourceTypes.ResponseHeadersPolicy),
+  const { unmanagedIds, ignoreCounts } = classifyResources({
+    allResourceIds: await Array.fromAsync(getCustomResponseHeadersPolicies()),
+    managedIds: await getResourceIds(ResourceTypes.ResponseHeadersPolicy),
   })
   const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-response-headers-policy --id ${id}`
@@ -19,7 +19,7 @@ export async function audit() {
   return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
-async function* getAllCustomResponseHeadersPolicies() {
+async function* getCustomResponseHeadersPolicies() {
   for await (const page of paginateListResponseHeadersPolicies({ client }, {})) {
     yield* page.ResponseHeadersPolicyList!.Items!
       .filter(item => item.Type === "custom")
@@ -28,7 +28,7 @@ async function* getAllCustomResponseHeadersPolicies() {
 }
 
 async function main() {
-  for await (const id of getAllCustomResponseHeadersPolicies()) {
+  for await (const id of getCustomResponseHeadersPolicies()) {
     console.log(id);
   }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S tsx
 import { deleteStackCommand, getAllStacks } from "../utils/stackInfo";
 import { Octokit } from "@octokit/rest";
-import { categorizeManagement } from "../utils/categorization";
+import { classifyResources } from "../utils/categorization";
 import { StackStatus } from "@aws-sdk/client-cloudformation";
 
 // This audit is unusual in that it deals with entire stacks,
@@ -22,9 +22,9 @@ export async function audit () {
 
   try {
     const label = `CloudFormation Orphaned Stacks (No Matching Git Branch in ${repoName})`;
-    const { unmanagedIds, ignoreCounts } = categorizeManagement({
+    const { unmanagedIds, ignoreCounts } = classifyResources({
       allResourceIds: (await getOrphanedStacks(repoName)).map(s => s.name),
-      managedResourceIds: [],
+      managedIds: [],
       ignoredPrefixes: [
         "CMS-Cloud",
         "cloudtamer",
