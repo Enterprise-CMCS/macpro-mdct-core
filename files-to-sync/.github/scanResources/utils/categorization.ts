@@ -1,30 +1,3 @@
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { IAMClient, ListAccountAliasesCommand } from "@aws-sdk/client-iam";
-
-export async function getAccountId() {
-  try {
-    return (await new STSClient().send(new GetCallerIdentityCommand())).Account;
-  } catch { }
-}
-
-async function getAccountAlias() {
-  try {
-    return (await new IAMClient().send(new ListAccountAliasesCommand())).AccountAliases?.[0];
-  } catch { }
-}
-
-/**
- * The account alias, or account ID, or the fallback `"unknown-account"`.
- * Normalized to only includes alphanumerics, dashes, and underscores.
- */
-export async function getAccountIdentifier() {
-  return (
-    await getAccountAlias() ||
-    await getAccountId() ||
-    "unknown-account"
-  ).replaceAll(/[^a-zA-Z0-9-_]/g, "_");
-}
-
 type CategorizationInfo = {
   /** The full list of all existing resource IDs of this type. */
   allResourceIds: string[],
@@ -33,22 +6,22 @@ type CategorizationInfo = {
   managedResourceIds: string[],
   
   /** If a resource ID begins with any of these, it will be ignored. */
-  ignorePrefixes?: string[],
+  ignoredPrefixes?: string[],
   
   /** If a resource has one of these IDs, it will be ignored. */
-  ignoreExact?: string[],
+  ignoredIds?: string[],
   
   /** If a resource ID contains any of these, it will be ignored. */
-  ignoreSubstrings?: string[],
+  ignoredSubstrings?: string[],
 }
 
 export function categorizeManagement(info: CategorizationInfo) {
   const {
     allResourceIds,
     managedResourceIds,
-    ignorePrefixes,
-    ignoreExact,
-    ignoreSubstrings,
+    ignoredPrefixes,
+    ignoredIds,
+    ignoredSubstrings,
   } = info;
   const UNMANAGED = "Unmanaged";
 
@@ -57,19 +30,19 @@ export function categorizeManagement(info: CategorizationInfo) {
       return "Managed by CloudFormation";
     }
 
-    const matchingSubstring = ignorePrefixes?.find(s => id.includes(s));
+    const matchingSubstring = ignoredPrefixes?.find(s => id.includes(s));
     if (matchingSubstring) {
       // return `Excluded by substring '${matchingSubstring}'`;
       return "Excluded by substring";
     }
 
-    const matchingPrefix = ignoreExact?.find(p => id.startsWith(p));
+    const matchingPrefix = ignoredIds?.find(p => id.startsWith(p));
     if (matchingPrefix) {
       // return `Excluded by prefix '${matchingPrefix}'`
       return "Excluded by prefix";
     }
 
-    if (ignoreSubstrings?.includes(id)) {
+    if (ignoredSubstrings?.includes(id)) {
       // return `Excluded by exact ID '${id}'`;
       return "Excluded by exact ID";
     }
@@ -87,7 +60,7 @@ export function categorizeManagement(info: CategorizationInfo) {
   delete counts[UNMANAGED];
 
   return {
-    unmanaged: groups[UNMANAGED] ?? [],
+    unmanagedIds: groups[UNMANAGED] ?? [],
     ignoreCounts: counts
   };
 }

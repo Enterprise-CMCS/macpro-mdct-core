@@ -1,17 +1,17 @@
 #!/usr/bin/env -S tsx
 import { EventBridgeClient } from "@aws-sdk/client-eventbridge";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { eventBridge_paginateListRulesCommand } from "../missingPaginators";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { paginateListRulesCommand } from "../utils/customPaginators/eventBridge";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new EventBridgeClient({ region: "us-east-1" });
 
 export async function audit () {
   const label = "Event Rules";
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllEventRules()),
     managedResourceIds: await getResourceIdsOfType("AWS::Events::Rule"),
-    ignorePrefixes: [
+    ignoredPrefixes: [
       "SSMExplorerManagedRule",
       "billing-alerts",
       "health-events",
@@ -22,15 +22,15 @@ export async function audit () {
       "Tenable",
     ],
   });
-  const deleteCommands = unmanaged.flatMap((name) => [
+  const deleteCommands = unmanagedIds.flatMap((name) => [
     `aws events remove-targets --rule ${name} --ids $(aws events list-targets-by-rule --rule ${name} --query 'Targets[].Id' --output text)`,
     `aws events delete-rule --name ${name}`,
   ]);
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllEventRules() {
-  for await (const page of eventBridge_paginateListRulesCommand({ client }, { Limit: 100 })) {
+  for await (const page of paginateListRulesCommand({ client }, { Limit: 100 })) {
     yield* page.Rules!.map(rule => rule.Name!)
   }
 }

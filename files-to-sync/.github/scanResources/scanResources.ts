@@ -1,45 +1,29 @@
 #!/usr/bin/env -S tsx
 import fs from "node:fs";
-import { getAccountIdentifier } from "./utils";
-import * as apiGateway from "./scanResourcesComponents/apiGateway";
-import * as cloudFrontCachePolicy from "./scanResourcesComponents/cloudFrontCachePolicy";
-import * as cloudFrontDistribution from "./scanResourcesComponents/cloudFrontDistribution";
-import * as cloudFrontOriginAccessControl from "./scanResourcesComponents/cloudFrontOriginAccessControl";
-import * as cloudFrontResponseHeadersPolicy from "./scanResourcesComponents/cloudFrontResponseHeadersPolicy";
-import * as cloudWatchLogs from "./scanResourcesComponents/cloudWatchLogs";
-import * as cognitoIdentityPool from "./scanResourcesComponents/cognitoIdentityPool";
-import * as cognitoUserPool from "./scanResourcesComponents/cognitoUserPool";
-import * as deleteFailedStacks from "./scanResourcesComponents/deleteFailedStacks";
-import * as dynamoDb from "./scanResourcesComponents/dynamoDb";
-import * as eni from "./scanResourcesComponents/eni";
-import * as eventsRule from "./scanResourcesComponents/eventsRule";
-import * as iamRole from "./scanResourcesComponents/iamRole";
-import * as kmsKey from "./scanResourcesComponents/kmsKey";
-import * as lambdaFunction from "./scanResourcesComponents/lambdaFunction";
-import * as lambdaLayers from "./scanResourcesComponents/lambdaLayers";
-import * as orphanedStacks from "./scanResourcesComponents/orphanedStacks";
-import * as s3Buckets from "./scanResourcesComponents/s3Buckets";
-import * as securityGroup from "./scanResourcesComponents/securityGroup";
-import * as wafWebACL from "./scanResourcesComponents/wafWebACL";
+import { getAccountIdentifier } from "./utils/identity";
+import type { AuditFunction } from "./utils/types";
+import * as apiGateway from "./auditors/apiGateway";
+import * as cloudFrontCachePolicy from "./auditors/cloudFrontCachePolicy";
+import * as cloudFrontDistribution from "./auditors/cloudFrontDistribution";
+import * as cloudFrontOriginAccessControl from "./auditors/cloudFrontOriginAccessControl";
+import * as cloudFrontResponseHeadersPolicy from "./auditors/cloudFrontResponseHeadersPolicy";
+import * as cloudWatchLogs from "./auditors/cloudWatchLogs";
+import * as cognitoIdentityPool from "./auditors/cognitoIdentityPool";
+import * as cognitoUserPool from "./auditors/cognitoUserPool";
+import * as deleteFailedStacks from "./auditors/deleteFailedStacks";
+import * as dynamoDb from "./auditors/dynamoDb";
+import * as eni from "./auditors/eni";
+import * as eventsRule from "./auditors/eventsRule";
+import * as iamRole from "./auditors/iamRole";
+import * as kmsKey from "./auditors/kmsKey";
+import * as lambdaFunction from "./auditors/lambdaFunction";
+import * as lambdaLayers from "./auditors/lambdaLayers";
+import * as orphanedStacks from "./auditors/orphanedStacks";
+import * as s3Buckets from "./auditors/s3Buckets";
+import * as securityGroup from "./auditors/securityGroup";
+import * as wafWebACL from "./auditors/wafWebACL";
 
 let outputFile = "unmanaged-resources.txt";
-
-type AuditResult = {
-  /** A human-readable name for this resource type. */
-  label: string;
-
-  /** The list of unmanaged resource IDs of this type */
-  unmanaged: string[];
-
-  /** How many existing resources were managed or ignored, for what reasons? */
-  ignoreCounts: Record<string, number>;
-
-  /** The necessary AWS CLI commands to delete the unmanaged resources */
-  deleteCommands: string[];
-} | {
-  /** A message explaining why the audit was not performed */
-  warning: string
-};
 
 function log(line: string = "") {
   console.log(line);
@@ -52,7 +36,7 @@ async function main() {
   fs.writeFileSync(outputFile, "");
   console.log(`Writing scan results to ${outputFile}`);
 
-  const resourceTypeAudits: (() => Promise<AuditResult>)[] = [
+  const resourceTypeAudits: AuditFunction[] = [
     deleteFailedStacks.audit,
     orphanedStacks.audit,
     apiGateway.audit,
@@ -84,26 +68,26 @@ async function main() {
       return;
     }
 
-    const { label, unmanaged, ignoreCounts, deleteCommands } = result;
+    const { label, unmanagedIds, ignoreCounts, deleteCommands } = result;
     const ignored = Object.values(ignoreCounts).reduce((sum, x) => sum + x, 0);
-    const totalCount = unmanaged.length + ignored;
+    const totalCount = unmanagedIds.length + ignored;
     
     log(`${label} (total: ${totalCount})`);
     for (const [reason, count] of Object.entries(ignoreCounts)) {
       log(`${reason}: ${count}`);
     }
     
-    if (unmanaged.length === 0) {
+    if (unmanagedIds.length === 0) {
       log("✅ All are managed by CloudFormation or safe to ignore.\n");
     } else {
       log("❌ Unmanaged (or DELETE_FAILED):");
-      for (const resourceId of unmanaged) {
+      for (const resourceId of unmanagedIds) {
         log(`- ${resourceId}`);
       }
       log();
 
       allDeleteCommands.push(
-        `Delete ${label} (${unmanaged.length} resources)`,
+        `Delete ${label} (${unmanagedIds.length} resources)`,
         ...deleteCommands,
         "",
       );

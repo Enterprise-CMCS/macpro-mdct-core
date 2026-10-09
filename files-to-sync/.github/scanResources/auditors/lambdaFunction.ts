@@ -1,18 +1,18 @@
 #!/usr/bin/env -S tsx
 import { LambdaClient, paginateListFunctions } from "@aws-sdk/client-lambda";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new LambdaClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "Lambda Functions";
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllLambdaFunctions()),
     managedResourceIds: await getResourceIdsOfType("AWS::Lambda::Function"),
   });
-  const deleteCommands = unmanaged.map((name) => `aws lambda delete-function --function-name ${name}`);
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  const deleteCommands = unmanagedIds.map((name) => `aws lambda delete-function --function-name ${name}`);
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllLambdaFunctions() {

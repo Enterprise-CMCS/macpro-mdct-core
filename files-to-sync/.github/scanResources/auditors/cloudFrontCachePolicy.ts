@@ -1,25 +1,25 @@
 #!/usr/bin/env -S tsx
 import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { cloudFront_paginateListCachePolicies } from "../missingPaginators";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { paginateListCachePolicies } from "../utils/customPaginators/cloudfront";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "CloudFront Custom Cache Policies";
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllCustomCachePolicies()),
     managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::CachePolicy"),
   });
-  const deleteCommands = unmanaged.map(
+  const deleteCommands = unmanagedIds.map(
     (id) => `aws cloudfront delete-cache-policy --id ${id}`
   );
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 async function* getAllCustomCachePolicies() {
-  for await (const page of cloudFront_paginateListCachePolicies({ client }, {})) {
+  for await (const page of paginateListCachePolicies({ client }, {})) {
     yield* page.CachePolicyList!.Items!
       .filter(policy => policy.Type === "custom")
       .map(policy => policy.CachePolicy!.Id!);

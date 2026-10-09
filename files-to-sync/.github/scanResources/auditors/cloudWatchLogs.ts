@@ -1,17 +1,14 @@
 #!/usr/bin/env -S tsx
-import {
-  CloudWatchLogsClient,
-  paginateDescribeLogGroups,
-} from "@aws-sdk/client-cloudwatch-logs";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { getAllStages } from "./apiGateway";
-import { categorizeManagement } from "../utils";
+import { CloudWatchLogsClient, paginateDescribeLogGroups } from "@aws-sdk/client-cloudwatch-logs";
+import { APIGatewayClient, GetStagesCommand } from "@aws-sdk/client-api-gateway";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new CloudWatchLogsClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "CloudWatch Log Groups";
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllLogGroups()),
     managedResourceIds: [
       ...await getResourceIdsOfType("AWS::Logs::LogGroup"),
@@ -20,14 +17,14 @@ export async function audit() {
       ...(await Array.fromAsync(getAllStages()))
         .map(({ restApiId, stageName }) => `API-Gateway-Execution-Logs_${restApiId}/${stageName}`),
     ],
-    ignorePrefixes: [
+    ignoredPrefixes: [
       "/aws/ec2",
       "/aws/rds",
       "/aws/lambda/CMS-Cloud",
       "/aws/lambda/cms-cloud",
       "/aws/lambda/NewRelicInfrastructure-Integrations-LambdaFunction",
     ],
-    ignoreExact: [
+    ignoredIds: [
       "/aws/ssm/CMS-Cloud-Security-RunInspec",
       "amazon-ssm-agent.log",
       "cms-cloud-vpc-querylogs",
@@ -37,13 +34,23 @@ export async function audit() {
       "/aws/lambda/ITOPS-Security-Attach-Inspector-to-SNS",
       "/aws-dynamodb/imports",
     ],
-    ignoreSubstrings: ["main"],
+    ignoredSubstrings: ["main"],
   });
-  const deleteCommands = unmanaged.map(
+  const deleteCommands = unmanagedIds.map(
     (id) => `aws logs delete-log-group --log-group-name ${id}`
   );
   
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
+}
+
+async function* getAllStages() {
+  const apiClient = new APIGatewayClient({ region: "us-east-1" });
+  const apiIds = await getResourceIdsOfType("AWS::ApiGateway::RestApi");
+  for (let restApiId of apiIds) {
+    const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
+    const stageNames = stages.item!.map(s => s.stageName!).filter(Boolean);
+    yield* stageNames.map(stageName => ({ restApiId, stageName }));
+  }
 }
 
 async function* getAllLogGroups() {

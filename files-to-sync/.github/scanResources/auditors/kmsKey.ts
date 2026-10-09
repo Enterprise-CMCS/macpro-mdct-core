@@ -4,8 +4,8 @@ import {
   paginateListKeys,
   DescribeKeyCommand,
 } from "@aws-sdk/client-kms";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new KMSClient({ region: "us-east-1" });
 
@@ -23,14 +23,14 @@ export async function audit () {
   // Combine both types - these are just key IDs
   const managedKeyIds = new Set([...directlyManagedKeys, ...keysFromAliases]);
 
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: allKmsKeys,
     managedResourceIds: allKmsKeys.filter((keyDetail) => {
       // For matching, we need to check if the key ID (before " - ") is in the managed set
       const keyId = keyDetail.split(" - ")[0];
       return managedKeyIds.has(keyId);
     }),
-    ignoreSubstrings: [
+    ignoredSubstrings: [
       "Tenable",
       "AWS Backups",
       "CloudTrail",
@@ -38,11 +38,11 @@ export async function audit () {
     ],
   });
 
-  const deleteCommands = unmanaged.map((detail) => {
+  const deleteCommands = unmanagedIds.map((detail) => {
     const id = detail.split(" - ")[0];
     return `aws kms schedule-key-deletion --key-id ${id} --pending-window-in-days 7`;
   });
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 /**

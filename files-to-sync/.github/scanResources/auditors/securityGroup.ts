@@ -1,7 +1,7 @@
 #!/usr/bin/env -S tsx
 import { EC2Client, paginateDescribeSecurityGroups } from "@aws-sdk/client-ec2";
-import { getUnprefixedStackNames, getResourceIdsOfType } from "../cloudFormation";
-import { categorizeManagement } from "../utils";
+import { getUnprefixedStackNames, getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new EC2Client({ region: "us-east-1" });
 
@@ -14,13 +14,13 @@ export async function audit () {
   const stackSpecificSecurityGroups = allSecurityGroups
     .filter((sg) => stackNames.some(name => sg.includes(name)))
 
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: allSecurityGroups,
     managedResourceIds: [
       ...stackSpecificSecurityGroups,
       ...await getResourceIdsOfType("AWS::EC2::SecurityGroup"),
     ],
-    ignoreSubstrings: [
+    ignoredSubstrings: [
       "cmscloud",
       "main",
       "master",
@@ -28,12 +28,12 @@ export async function audit () {
     ],
   });
 
-  const deleteCommands = unmanaged.map((detail) => {
+  const deleteCommands = unmanagedIds.map((detail) => {
     const id = detail.split(" - ")[0];
     return `aws ec2 delete-security-group --group-id ${id}`;
   })
 
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 async function* getAllSecurityGroups() {

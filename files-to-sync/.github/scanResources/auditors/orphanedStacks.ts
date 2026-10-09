@@ -1,7 +1,7 @@
 #!/usr/bin/env -S tsx
-import * as cloudFormation from "../cloudFormation";
+import * as cloudFormation from "../utils/stackInfo";
 import { Octokit } from "@octokit/rest";
-import { categorizeManagement } from "../utils";
+import { categorizeManagement } from "../utils/categorization";
 import { StackStatus } from "@aws-sdk/client-cloudformation";
 
 export async function audit () {
@@ -17,10 +17,10 @@ export async function audit () {
 
   try {
     const label = `CloudFormation Orphaned Stacks (No Matching Git Branch in ${repoName})`;
-    const { unmanaged, ignoreCounts } = categorizeManagement({
+    const { unmanagedIds, ignoreCounts } = categorizeManagement({
       allResourceIds: (await getOrphanedStacks(repoName)).map(s => s.name),
       managedResourceIds: [],
-      ignorePrefixes: [
+      ignoredPrefixes: [
         "CMS-Cloud",
         "cloudtamer",
         "ct-",
@@ -29,7 +29,7 @@ export async function audit () {
         "cms",
         "security-hub-collector",
       ],
-      ignoreExact: [
+      ignoredIds: [
         "ConsolidatedPermissionBoundaryCFT",
         "CDKToolkit",
         "cbj-delete-snapshot",
@@ -39,8 +39,8 @@ export async function audit () {
           .map(project => `${project}-prerequisites`)
       ]
     });
-    const deleteCommands = unmanaged.map(cloudFormation.deleteStackCommand);
-    return { label, unmanaged, ignoreCounts, deleteCommands };
+    const deleteCommands = unmanagedIds.map(cloudFormation.deleteStackCommand);
+    return { label, unmanagedIds, ignoreCounts, deleteCommands };
   } catch (error: any) {
     return { warning: `⚠️ Failed to check orphaned stacks: ${error?.message || error}\n` };
   }

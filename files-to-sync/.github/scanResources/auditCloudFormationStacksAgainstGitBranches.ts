@@ -1,8 +1,8 @@
 #!/usr/bin/env -S tsx
 import fs from "node:fs";
 import path from "node:path";
-import { getAccountIdentifier } from "./utils";
-import { getOrphanedStacks } from "./scanResourcesComponents/orphanedStacks";
+import { getAccountIdentifier } from "./utils/identity";
+import { getOrphanedStacks } from "./auditors/orphanedStacks";
 
 interface StackInfo {
   name: string;

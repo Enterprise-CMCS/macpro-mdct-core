@@ -1,17 +1,18 @@
 #!/usr/bin/env -S tsx
 import { S3Client, paginateListBuckets } from "@aws-sdk/client-s3";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { categorizeManagement, getAccountId } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
+import { getAccountId } from "../utils/identity";
 
 const client = new S3Client({ region: "us-east-1" });
 
 export async function audit () {
   const label = "S3 Buckets";
   const accountId = await getAccountId();
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllS3Buckets()),
     managedResourceIds: await getResourceIdsOfType("AWS::S3::Bucket"),
-    ignoreSubstrings: [
+    ignoredSubstrings: [
       "prod",
       "us-west-2",
       "main",
@@ -21,11 +22,12 @@ export async function audit () {
   });
   
   // commented out, since deleting a nonempty bucket is ESPECIALLY destructive.
-  // const deleteCommands = unmanaged.map(bucketId =>
+  // const deleteCommands = unmanagedIds.map(bucketId =>
   //   `aws s3 rb s3://${bucketId} --force  # WARNING: Deletes all objects!`,
   // );
+  const deleteCommands: string[] = [];
 
-  return { label, unmanaged, ignoreCounts, deleteCommands: [] };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllS3Buckets() {

@@ -3,8 +3,8 @@ import {
   EC2Client,
   paginateDescribeNetworkInterfaces,
 } from "@aws-sdk/client-ec2";
-import { getResourceIdsOfType, getUnprefixedStackNames } from "../cloudFormation";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType, getUnprefixedStackNames } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new EC2Client({ region: "us-east-1" });
 
@@ -18,22 +18,22 @@ export async function audit() {
   const stackSpecificEnis = allNetworkInterfaces
     .filter((eni) => stackNames.some(name => eni.includes(name)));
 
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: allNetworkInterfaces,
     managedResourceIds: [...managedEnis, ...stackSpecificEnis],
-    ignoreSubstrings: [
+    ignoredSubstrings: [
       "main",
       "master",
       "Transit Gateway",
       "VPC Endpoint Interface",
     ]
   });
-  const deleteCommands = unmanaged.map((detail) => {
+  const deleteCommands = unmanagedIds.map((detail) => {
     const id = detail.split(" - ")[0];
     return `aws ec2 delete-network-interface --network-interface-id ${id}`;
   });
   
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllNetworkInterfaces() {

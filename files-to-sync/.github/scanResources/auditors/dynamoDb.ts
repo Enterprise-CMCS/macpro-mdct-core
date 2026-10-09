@@ -1,21 +1,21 @@
 #!/usr/bin/env -S tsx
 import { DynamoDBClient, paginateListTables } from "@aws-sdk/client-dynamodb";
-import { getResourceIdsOfType } from "../cloudFormation";
-import { categorizeManagement } from "../utils";
+import { getResourceIdsOfType } from "../utils/stackInfo";
+import { categorizeManagement } from "../utils/categorization";
 
 const client = new DynamoDBClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "DynamoDB Tables";
-  const { unmanaged, ignoreCounts } = categorizeManagement({
+  const { unmanagedIds, ignoreCounts } = categorizeManagement({
     allResourceIds: await Array.fromAsync(getAllTableNames()),
     managedResourceIds: await getResourceIdsOfType("AWS::DynamoDB::Table"),
-    ignoreSubstrings: ["main"],
+    ignoredSubstrings: ["main"],
   });
-  const deleteCommands = unmanaged.map(
+  const deleteCommands = unmanagedIds.map(
     (name) => `aws dynamodb delete-table --table-name ${name}`
   );
-  return { label, unmanaged, ignoreCounts, deleteCommands };
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
 }
 
 export async function* getAllTableNames() {
