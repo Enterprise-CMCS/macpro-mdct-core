@@ -4,74 +4,90 @@ import {
   paginateListKeys,
   DescribeKeyCommand,
 } from "@aws-sdk/client-kms";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new KMSClient({ region: "us-east-1" });
 
-async function getAllKmsKeys(): Promise<string[]> {
-  const keyDetails: string[] = [];
+export async function audit () {
+  const label = "KMS Keys";
+  const allKmsKeys = await Array.fromAsync(getAllKmsKeys());
 
-  for await (const page of paginateListKeys({ client }, { Limit: 100 })) {
-    if (page.Keys) {
-      for (const key of page.Keys) {
-        const keyId = key.KeyId!;
-        try {
-          const describeResult = await client.send(
-            new DescribeKeyCommand({ KeyId: keyId })
-          );
+  // Treat KMS keys as managed if they're directly managed by CloudFormation
+  // OR if they're referenced by a CloudFormation-managed KMS alias
+  const directlyManagedKeys = await getResourceIdsOfType("AWS::KMS::Key");
+  const cfManagedAliases = await getResourceIdsOfType("AWS::KMS::Alias");
+  const keysFromAliases = (await Promise.all(cfManagedAliases.map(getKeyIdFromAlias)))
+    .filter(Boolean);
 
-          // Skip AWS-managed keys (cannot be deleted)
-          const keyManager = describeResult.KeyMetadata?.KeyManager;
-          if (keyManager === "AWS") {
-            continue;
-          }
+  // Combine both types - these are just key IDs
+  const managedKeyIds = new Set([...directlyManagedKeys, ...keysFromAliases]);
 
-          const description =
-            describeResult.KeyMetadata?.Description || "(no description)";
-          keyDetails.push(`${keyId} - ${description}`);
-        } catch {
-          keyDetails.push(`${keyId} - (unable to describe)`);
-        }
-      }
-    }
-  }
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: allKmsKeys,
+    managedResourceIds: allKmsKeys.filter((keyDetail) => {
+      // For matching, we need to check if the key ID (before " - ") is in the managed set
+      const keyId = keyDetail.split(" - ")[0];
+      return managedKeyIds.has(keyId);
+    }),
+    ignoreSubstrings: [
+      "Tenable",
+      "AWS Backups",
+      "CloudTrail",
+      "KMS key for encrypting logs",
+    ],
+  });
 
-  return keyDetails;
-}
-
-async function getKeysFromAliases(aliasNames: string[]): Promise<string[]> {
-  const keyIds: string[] = [];
-
-  for (const aliasName of aliasNames) {
-    try {
-      const describeResult = await client.send(
-        new DescribeKeyCommand({ KeyId: aliasName })
-      );
-      const keyId = describeResult.KeyMetadata?.KeyId;
-      if (keyId) {
-        keyIds.push(keyId);
-      }
-    } catch {
-      // Alias might not exist or might have been deleted
-      continue;
-    }
-  }
-
-  return keyIds;
-}
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map((detail) => {
+  const deleteCommands = unmanaged.map((detail) => {
     const id = detail.split(" - ")[0];
     return `aws kms schedule-key-deletion --key-id ${id} --pending-window-in-days 7`;
   });
+  return { label, unmanaged, ignoreCounts, deleteCommands };
 }
 
-export default { getAllKmsKeys, getKeysFromAliases, generateDeleteCommands };
+/**
+ * Return the key description,
+ * OR a fallback value if fetching the description fails,
+ * OR undefined if the key is managed by AWS (and thus cannot be deleted)
+ */
+async function describeKey (KeyId: string) {
+  try {
+    const result = await client.send(new DescribeKeyCommand({ KeyId }));
+    if (result.KeyMetadata?.KeyManager === "AWS") {
+      return undefined;
+    }
+    return result.KeyMetadata?.Description || "(no description)";
+  } catch {
+    return "(unable to describe)";
+  }
+}
+
+async function getKeyIdFromAlias (alias: string) {
+  try {
+    const result = await client.send(new DescribeKeyCommand({ KeyId: alias }));
+    return result.KeyMetadata?.KeyId;
+  } catch {
+    // Alias might not exist, or might have been deleted
+    return undefined;
+  }
+}
+
+export async function* getAllKmsKeys() {
+  for await (const page of paginateListKeys({ client }, { Limit: 100 })) {
+    for (const id of (page.Keys ?? []).map(key => key.KeyId!)) {
+      const description = await describeKey(id);
+      if (!description) {
+        continue;
+      }
+      yield `${id} - ${description}`;
+    }
+  }
+}
 
 async function main() {
-  const keys = await getAllKmsKeys();
-
-  for (const k of keys) console.log(k);
+  for await (const key of getAllKmsKeys()) {
+    console.log(key);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

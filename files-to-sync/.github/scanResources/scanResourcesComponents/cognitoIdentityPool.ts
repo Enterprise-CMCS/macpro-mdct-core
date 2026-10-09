@@ -3,35 +3,33 @@ import {
   CognitoIdentityClient,
   paginateListIdentityPools,
 } from "@aws-sdk/client-cognito-identity";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new CognitoIdentityClient({ region: "us-east-1" });
 
-async function getAllIdentityPools(): Promise<string[]> {
-  const ids: string[] = [];
-
-  for await (const page of paginateListIdentityPools(
-    { client },
-    { MaxResults: 60 }
-  )) {
-    for (const p of page.IdentityPools!) {
-      ids.push(p.IdentityPoolId!);
-    }
-  }
-
-  return ids;
-}
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map(
-    (id) => `aws cognito-identity delete-identity-pool --identity-pool-id ${id}`
+export async function audit() {
+  const label = "Cognito Identity Pools";
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: await Array.fromAsync(getAllIdentityPools()),
+    managedResourceIds: await getResourceIdsOfType("AWS::Cognito::IdentityPool"),
+  });
+  const deleteCommands = unmanaged.map(
+    (id) => `aws cognito-identity delete-identity-pool --identity-pool-id ${id}`,
   );
+  return { label, unmanaged, ignoreCounts, deleteCommands };
 }
 
-export default { getAllIdentityPools, generateDeleteCommands };
+export async function* getAllIdentityPools() {
+  for await (const page of paginateListIdentityPools({ client }, { MaxResults: 60 })) {
+    yield* page.IdentityPools!.map(pool => pool.IdentityPoolId!)
+  }
+}
 
 async function main() {
-  const ids = await getAllIdentityPools();
-  for (const id of ids) console.log(id);
+  for await (const id of getAllIdentityPools()) {
+    console.log(id);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

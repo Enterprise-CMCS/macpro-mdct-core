@@ -3,46 +3,37 @@ import {
   CloudFrontClient,
   paginateListDistributions,
 } from "@aws-sdk/client-cloudfront";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
-async function getAllDistributions(): Promise<string[]> {
-  const ids: string[] = [];
-
-  for await (const page of paginateListDistributions({ client }, {})) {
-    for (const d of page.DistributionList!.Items!) {
-      ids.push(d.Id!);
-    }
-  }
-
-  return ids;
-}
-
-function generateDeleteCommands(resources: string[]): string[] {
-  const commands: string[] = [];
-  resources.forEach((id) => {
-    commands.push(`# Disable and delete distribution ${id}`);
-    commands.push(
-      `aws cloudfront get-distribution-config --id ${id} > /tmp/dist-config-${id}.json`
-    );
-    commands.push(
-      `# Manually edit /tmp/dist-config-${id}.json to set Enabled to false, then:`
-    );
-    commands.push(
-      `aws cloudfront update-distribution --id ${id} --distribution-config file:///tmp/dist-config-${id}.json --if-match <ETag>`
-    );
-    commands.push(
-      `aws cloudfront delete-distribution --id ${id} --if-match <ETag>`
-    );
+export async function audit() {
+  const label = "CloudFront Distributions";
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: await Array.fromAsync(getAllDistributions()),
+    managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::Distribution"),
   });
-  return commands;
+  const deleteCommands = unmanaged.flatMap((id) => [
+    `# Disable and delete distribution ${id}`,
+    `aws cloudfront get-distribution-config --id ${id} > /tmp/dist-config-${id}.json`,
+    `# Manually edit /tmp/dist-config-${id}.json to set Enabled to false, then:`,
+    `aws cloudfront update-distribution --id ${id} --distribution-config file:///tmp/dist-config-${id}.json --if-match <ETag>`,
+    `aws cloudfront delete-distribution --id ${id} --if-match <ETag>`,
+  ]);
+  return { label, unmanaged, ignoreCounts, deleteCommands };
 }
 
-export default { getAllDistributions, generateDeleteCommands };
+async function* getAllDistributions() {
+  for await (const page of paginateListDistributions({ client }, {})) {
+    yield* page.DistributionList!.Items!.map(dist => dist.Id!);
+  }
+}
 
 async function main() {
-  const ids = await getAllDistributions();
-  for (const id of ids) console.log(id);
+  for await (const id of getAllDistributions()) {
+    console.log(id);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

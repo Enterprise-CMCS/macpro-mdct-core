@@ -4,43 +4,38 @@ import {
   paginateListLayers,
   paginateListLayerVersions,
 } from "@aws-sdk/client-lambda";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new LambdaClient({ region: "us-east-1" });
 
-async function getAllLayerVersionArns(): Promise<string[]> {
-  const arns: string[] = [];
+export async function audit() {
+  const label = "Lambda LayerVersions";
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: await Array.fromAsync(getAllLayerVersionArns()),
+    managedResourceIds: await getResourceIdsOfType("AWS::Lambda::LayerVersion"),
+  });
+  const deleteCommands = unmanaged.map((arn) => {
+    const [layerName, layerVersion] = arn.split(":").slice(6);
+    return `aws lambda delete-layer-version --layer-name ${layerName} --version-number ${layerVersion}`;
+  });
+  return { label, unmanaged, ignoreCounts, deleteCommands };
+}
 
-  for await (const layersPage of paginateListLayers({ client }, {})) {
-    for (const layer of layersPage.Layers!) {
-      for await (const versionsPage of paginateListLayerVersions(
-        { client },
-        { LayerName: layer.LayerName! }
-      )) {
-        for (const v of versionsPage.LayerVersions!) {
-          arns.push(v.LayerVersionArn!);
-        }
+async function* getAllLayerVersionArns() {
+  for await (const layerPage of paginateListLayers({ client }, {})) {
+    for (const { LayerName } of layerPage.Layers!) {
+      for await (const versionPage of paginateListLayerVersions({ client }, { LayerName })) {
+        yield* versionPage.LayerVersions!.map(v => v.LayerVersionArn!);
       }
     }
   }
-
-  return arns;
 }
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map((arn) => {
-    const parts = arn.split(":");
-    const layerName = parts[6];
-    const layerVersion = parts[7];
-
-    return `aws lambda delete-layer-version --layer-name ${layerName} --version-number ${layerVersion}`;
-  });
-}
-
-export default { getAllLayerVersionArns, generateDeleteCommands };
 
 async function main() {
-  const arns = await getAllLayerVersionArns();
-  for (const a of arns) console.log(a);
+  for await (const arn of getAllLayerVersionArns()) {
+    console.log(arn);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

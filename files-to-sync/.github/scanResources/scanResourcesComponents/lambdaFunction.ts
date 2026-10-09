@@ -1,31 +1,30 @@
 #!/usr/bin/env -S tsx
 import { LambdaClient, paginateListFunctions } from "@aws-sdk/client-lambda";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new LambdaClient({ region: "us-east-1" });
 
-async function getAllLambdaFunctions(): Promise<string[]> {
-  const names: string[] = [];
+export async function audit() {
+  const label = "Lambda Functions";
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: await Array.fromAsync(getAllLambdaFunctions()),
+    managedResourceIds: await getResourceIdsOfType("AWS::Lambda::Function"),
+  });
+  const deleteCommands = unmanaged.map((name) => `aws lambda delete-function --function-name ${name}`);
+  return { label, unmanaged, ignoreCounts, deleteCommands };
+}
 
+export async function* getAllLambdaFunctions() {
   for await (const page of paginateListFunctions({ client }, {})) {
-    for (const f of page.Functions!) {
-      names.push(f.FunctionName!);
-    }
+    yield* page.Functions!.map(func => func.FunctionName!)
   }
-
-  return names;
 }
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map(
-    (name) => `aws lambda delete-function --function-name ${name}`
-  );
-}
-
-export default { getAllLambdaFunctions, generateDeleteCommands };
 
 async function main() {
-  const names = await getAllLambdaFunctions();
-  for (const n of names) console.log(n);
+  for await (const name of getAllLambdaFunctions()) {
+    console.log(name);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

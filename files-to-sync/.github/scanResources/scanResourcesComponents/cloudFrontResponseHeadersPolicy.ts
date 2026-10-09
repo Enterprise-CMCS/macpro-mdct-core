@@ -1,44 +1,35 @@
 #!/usr/bin/env -S tsx
-import {
-  CloudFrontClient,
-  ListResponseHeadersPoliciesCommand,
-} from "@aws-sdk/client-cloudfront";
+import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
+import { getResourceIdsOfType } from "../cloudFormation";
+import { cloudFront_paginateListResponseHeadersPolicies } from "../missingPaginators";
+import { categorizeManagement } from "../utils";
 
 const client = new CloudFrontClient({ region: "us-east-1" });
 
-async function getAllCustomResponseHeadersPolicies(): Promise<string[]> {
-  const ids: string[] = [];
-  let marker: string | undefined;
-
-  do {
-    const r = await client.send(
-      new ListResponseHeadersPoliciesCommand({ Marker: marker })
-    );
-
-    for (const item of r.ResponseHeadersPolicyList!.Items!) {
-      if (item.Type === "custom") ids.push(item.ResponseHeadersPolicy!.Id!);
-    }
-
-    marker = r.ResponseHeadersPolicyList!.NextMarker;
-  } while (marker);
-
-  return ids;
-}
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map(
+export async function audit() {
+  const label = "CloudFront Custom Response Headers Policies";
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: await Array.fromAsync(getAllCustomResponseHeadersPolicies()),
+    managedResourceIds: await getResourceIdsOfType("AWS::CloudFront::ResponseHeadersPolicy"),
+  })
+  const deleteCommands = unmanaged.map(
     (id) => `aws cloudfront delete-response-headers-policy --id ${id}`
   );
+  return { label, unmanaged, ignoreCounts, deleteCommands };
 }
 
-export default {
-  getAllCustomResponseHeadersPolicies,
-  generateDeleteCommands,
-};
+async function* getAllCustomResponseHeadersPolicies() {
+  for await (const page of cloudFront_paginateListResponseHeadersPolicies({ client }, {})) {
+    yield* page.ResponseHeadersPolicyList!.Items!
+      .filter(item => item.Type === "custom")
+      .map(item => item.ResponseHeadersPolicy!.Id!);
+  }
+}
 
 async function main() {
-  const ids = await getAllCustomResponseHeadersPolicies();
-  for (const id of ids) console.log(id);
+  for await (const id of getAllCustomResponseHeadersPolicies()) {
+    console.log(id);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

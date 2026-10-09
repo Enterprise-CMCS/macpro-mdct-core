@@ -3,39 +3,55 @@ import {
   EC2Client,
   paginateDescribeNetworkInterfaces,
 } from "@aws-sdk/client-ec2";
+import { getResourceIdsOfType, getUnprefixedStackNames } from "../cloudFormation";
+import { categorizeManagement } from "../utils";
 
 const client = new EC2Client({ region: "us-east-1" });
 
-async function getAllNetworkInterfaces(): Promise<string[]> {
-  const eniDetails: string[] = [];
+export async function audit() {
+  const label = "Network Interfaces (ENIs)";
+  const managedEnis = await getResourceIdsOfType("AWS::EC2::NetworkInterface");
+  
+  // Exclude ENIs that contain a CloudFormation stack name (treated as managed)
+  const allNetworkInterfaces = await Array.fromAsync(getAllNetworkInterfaces());
+  const stackNames = await getUnprefixedStackNames();
+  const stackSpecificEnis = allNetworkInterfaces
+    .filter((eni) => stackNames.some(name => eni.includes(name)));
 
-  for await (const page of paginateDescribeNetworkInterfaces({ client }, {})) {
-    if (page.NetworkInterfaces) {
-      for (const eni of page.NetworkInterfaces) {
-        const eniId = eni.NetworkInterfaceId!;
-        const description = eni.Description || "(no description)";
-        const status = eni.Status || "unknown";
-        eniDetails.push(`${eniId} - ${description} - ${status}`);
-      }
-    }
-  }
-
-  return eniDetails;
-}
-
-function generateDeleteCommands(resources: string[]): string[] {
-  return resources.map((detail) => {
+  const { unmanaged, ignoreCounts } = categorizeManagement({
+    allResourceIds: allNetworkInterfaces,
+    managedResourceIds: [...managedEnis, ...stackSpecificEnis],
+    ignoreSubstrings: [
+      "main",
+      "master",
+      "Transit Gateway",
+      "VPC Endpoint Interface",
+    ]
+  });
+  const deleteCommands = unmanaged.map((detail) => {
     const id = detail.split(" - ")[0];
     return `aws ec2 delete-network-interface --network-interface-id ${id}`;
   });
+  
+  return { label, unmanaged, ignoreCounts, deleteCommands };
 }
 
-export default { getAllNetworkInterfaces, generateDeleteCommands };
+export async function* getAllNetworkInterfaces() {
+  for await (const page of paginateDescribeNetworkInterfaces({ client }, {})) {
+  yield* (page.NetworkInterfaces ?? [])
+    .map((eni) => {
+      const id = eni.NetworkInterfaceId!;
+      const description = eni.Description || "(no description)";
+      const status = eni.Status || "unknown";
+      return `${id} - ${description} - ${status}`;
+    })
+  }
+}
 
 async function main() {
-  const enis = await getAllNetworkInterfaces();
-
-  for (const e of enis) console.log(e);
+  for await (const eni of getAllNetworkInterfaces()) {
+    console.log(eni);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
