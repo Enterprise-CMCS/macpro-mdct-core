@@ -1,66 +1,13 @@
 #!/usr/bin/env -S tsx
 import fs from "node:fs";
 import path from "node:path";
-import { StackStatus } from "@aws-sdk/client-cloudformation";
-import { Octokit } from "@octokit/rest";
-import { getAccountIdentifier } from "./utils";
-import cloudFormation from "./scanResourcesComponents/cloudFormation";
+import { getAccountIdentifier } from "./utils/identity";
+import { getOrphanedStacks } from "./auditors/orphanedStacks";
 
 interface StackInfo {
   name: string;
   creationTime: Date;
   status: string;
-}
-
-export async function getRepoBranches(repoName: string): Promise<string[]> {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) throw new Error("GITHUB_TOKEN not set");
-  const octokit = new Octokit({ auth: token });
-
-  const branches: string[] = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const branchesResponse = await octokit.repos.listBranches({
-      owner: "Enterprise-CMCS",
-      repo: repoName,
-      per_page: 100,
-      page,
-    });
-
-    branches.push(...branchesResponse.data.map((b) => b.name));
-    hasMore = branchesResponse.data.length === 100;
-    page++;
-  }
-
-  return branches;
-}
-
-export async function getOrphanedStacks(
-  repoName: string
-): Promise<StackInfo[]> {
-  const stackSummaries = await cloudFormation.getAllStacks();
-  const stacks: StackInfo[] = stackSummaries
-    .filter(
-      (s) =>
-        s.StackName &&
-        s.CreationTime &&
-        s.StackStatus !== StackStatus.DELETE_COMPLETE
-    )
-    .map((s) => ({
-      name: s.StackName!,
-      creationTime: s.CreationTime!,
-      status: s.StackStatus!,
-    }));
-
-  const branches = await getRepoBranches(repoName);
-
-  const orphanedStacks = stacks
-    .filter((stack) => !branches.some((branch) => stack.name.includes(branch)))
-    .toSorted((a, b) => a.creationTime.getTime() - b.creationTime.getTime());
-
-  return orphanedStacks;
 }
 
 async function main() {

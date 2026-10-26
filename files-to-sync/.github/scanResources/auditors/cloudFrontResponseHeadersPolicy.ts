@@ -1,0 +1,41 @@
+#!/usr/bin/env -S tsx
+import { CloudFrontClient } from "@aws-sdk/client-cloudfront";
+import { getResourceIds } from "../utils/stackInfo";
+import { paginateListResponseHeadersPolicies } from "../utils/customPaginators/cloudfront";
+import { classifyResources } from "../utils/categorization";
+import { ResourceTypes } from "../utils/types";
+
+const client = new CloudFrontClient({ region: "us-east-1" });
+
+export async function audit() {
+  const label = "CloudFront Custom Response Headers Policies";
+  const { unmanagedIds, ignoreCounts } = classifyResources({
+    allResourceIds: await Array.fromAsync(getCustomResponseHeadersPolicies()),
+    managedIds: await getResourceIds(ResourceTypes.ResponseHeadersPolicy),
+  });
+  const deleteCommands = unmanagedIds.map(
+    (id) => `aws cloudfront delete-response-headers-policy --id ${id}`
+  );
+  return { label, unmanagedIds, ignoreCounts, deleteCommands };
+}
+
+async function* getCustomResponseHeadersPolicies() {
+  const pages = paginateListResponseHeadersPolicies({ client }, {});
+  for await (const page of pages) {
+    yield* page
+      .ResponseHeadersPolicyList!.Items!.filter(
+        (item) => item.Type === "custom"
+      )
+      .map((item) => item.ResponseHeadersPolicy!.Id!);
+  }
+}
+
+async function main() {
+  for await (const id of getCustomResponseHeadersPolicies()) {
+    console.log(id);
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}
