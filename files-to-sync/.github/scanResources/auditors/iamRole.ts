@@ -1,6 +1,6 @@
 #!/usr/bin/env -S tsx
 import { IAMClient, paginateListRoles } from "@aws-sdk/client-iam";
-import { getResourceIds } from "../utils/stackInfo";
+import { getResourceIds, PROJECT_NAMES } from "../utils/stackInfo";
 import { classifyResources } from "../utils/categorization";
 import { ResourceTypes } from "../utils/types";
 
@@ -8,11 +8,8 @@ const client = new IAMClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
-  const allowedPrefixes = [
-    "seds", "carts", "qmr", "mcr", "mfp", "hcbs", "rhtp", "datasets", "pasrr"
-  ];
   const allRoles = (await Array.fromAsync(getAllIamRoles()))
-    .filter((role) => allowedPrefixes.some(p => role.startsWith(p)));
+    .filter((role) => PROJECT_NAMES.some(p => role.startsWith(p)));
   
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: allRoles,

@@ -34,6 +34,10 @@ export async function getAllStacks() {
   return cachedStacks;
 }
 
+export const PROJECT_NAMES = [
+  "seds", "carts", "qmr", "mcr", "mfp", "hcbs", "rhtp", "datasets", "pasrr"
+];
+
 /**
  * Get all stack names,
  * removing project prefix (ex: `"mfp-foobar"` becomes `"foobar"`),
@@ -45,14 +49,16 @@ export async function getAllStacks() {
  */
 export async function getUnprefixedStackNames() {
   function removePrefix(name: string | undefined) {
-    const projectPrefixRegex = /^(seds|qmr|mcr|mfp|hcbs|carts)-/i; // |app-api
     if (!name) {
       return undefined;
     }
-    if (!projectPrefixRegex.test(name)) {
+    const prefix = PROJECT_NAMES
+      .map((projectName) => `${projectName}-`)
+      .find((pfx) => name.startsWith(pfx + "-"));
+    if (!prefix) {
       return name;
     }
-    const unprefixedName = name.replace(projectPrefixRegex, "");
+    const unprefixedName = name.replace(prefix, "");
     if (unprefixedName.length <= 5) {
       return undefined;
     }
