@@ -57,9 +57,15 @@ async function* getAllStages() {
   const apiClient = new APIGatewayClient({ region: "us-east-1" });
   const apiIds = await getResourceIds(ResourceTypes.RestApi);
   for (let restApiId of apiIds) {
-    const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
-    const stageNames = stages.item!.map((s) => s.stageName!).filter(Boolean);
-    yield* stageNames.map((stageName) => ({ restApiId, stageName }));
+    try {
+      const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
+      const stageNames = stages.item!.map((s) => s.stageName!).filter(Boolean);
+      yield* stageNames.map((stageName) => ({ restApiId, stageName }));
+    } catch (e: any) {
+      console.warn(
+        `Skipping API '${restApiId}' in cloudwatch log audit: ${e.message}`
+      );
+    }
   }
 }
 

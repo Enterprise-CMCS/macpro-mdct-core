@@ -64,13 +64,18 @@ async function main() {
   const allDeleteCommands: string[] = [];
 
   for (let audit of resourceTypeAudits) {
-    const result = await audit();
-    if ("warning" in result) {
-      log(`⚠️ ${result.warning}`);
+    let auditResult;
+    try {
+      auditResult = await audit();
+    } catch (e: any) {
+      auditResult = { warning: e.message };
+    }
+    if ("warning" in auditResult) {
+      log(`⚠️ ${auditResult.warning}`);
       continue;
     }
 
-    const { label, unmanagedIds, ignoreCounts, deleteCommands } = result;
+    const { label, unmanagedIds, ignoreCounts, deleteCommands } = auditResult;
     const ignored = Object.values(ignoreCounts).reduce((sum, x) => sum + x, 0);
     const totalCount = unmanagedIds.length + ignored;
 
