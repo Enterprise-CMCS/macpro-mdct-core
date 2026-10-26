@@ -8,10 +8,15 @@ const client = new IAMClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
+  const allowedPrefixes = [
+    "seds", "carts", "qmr", "mcr", "mfp", "hcbs", "rhtp", "datasets", "pasrr"
+  ];
+  const allRoles = (await Array.fromAsync(getAllIamRoles()))
+    .filter((role) => allowedPrefixes.some(p => role.startsWith(p)));
+  
   const { unmanagedIds, ignoreCounts } = classifyResources({
-    allResourceIds: await Array.fromAsync(getAllIamRoles()),
+    allResourceIds: allRoles,
     managedIds: await getResourceIds(ResourceTypes.IamRole),
-    ignoredPrefixes: ["seds", "qmr", "mcr", "mfp", "hcbs", "carts"],
   });
   const deleteCommands = unmanagedIds.flatMap((name) => [
     `# Delete IAM role ${name}`,
