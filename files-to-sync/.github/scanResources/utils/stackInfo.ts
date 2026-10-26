@@ -52,13 +52,11 @@ export async function getUnprefixedStackNames() {
     if (!name) {
       return undefined;
     }
-    const prefix = PROJECT_NAMES
-      .map((projectName) => `${projectName}-`)
-      .find((pfx) => name.startsWith(pfx + "-"));
-    if (!prefix) {
+    let prefix = name.split("-")[0];
+    if (!PROJECT_NAMES.some((n) => n.toLowerCase() === prefix.toLowerCase())) {
       return name;
     }
-    const unprefixedName = name.replace(prefix, "");
+    const unprefixedName = name.replace(prefix + "-", "");
     if (unprefixedName.length <= 5) {
       return undefined;
     }
