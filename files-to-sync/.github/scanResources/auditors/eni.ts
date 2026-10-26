@@ -17,7 +17,7 @@ export async function audit() {
   const allNetworkInterfaces = await Array.fromAsync(getAllNetworkInterfaces());
   const stackNames = await getUnprefixedStackNames();
   const stackSpecificEnis = allNetworkInterfaces.filter((eni) =>
-    stackNames.some((name) => eni.includes(name))
+    stackNames.some((name) => eni.toLowerCase().includes(name.toLowerCase()))
   );
 
   const { unmanagedIds, ignoreCounts } = classifyResources({

@@ -13,7 +13,7 @@ export async function audit() {
   const allSecurityGroups = await Array.fromAsync(getAllSecurityGroups());
   const stackNames = await getUnprefixedStackNames();
   const stackSpecificSecurityGroups = allSecurityGroups.filter((sg) =>
-    stackNames.some((name) => sg.includes(name))
+    stackNames.some((name) => sg.toLowerCase().includes(name.toLowerCase()))
   );
 
   const { unmanagedIds, ignoreCounts } = classifyResources({
