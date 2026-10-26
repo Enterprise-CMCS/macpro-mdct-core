@@ -35,7 +35,15 @@ export async function getAllStacks() {
 }
 
 export const PROJECT_NAMES = [
-  "seds", "carts", "qmr", "mcr", "mfp", "hcbs", "rhtp", "datasets", "pasrr"
+  "seds",
+  "carts",
+  "qmr",
+  "mcr",
+  "mfp",
+  "hcbs",
+  "rhtp",
+  "datasets",
+  "pasrr",
 ];
 
 /**

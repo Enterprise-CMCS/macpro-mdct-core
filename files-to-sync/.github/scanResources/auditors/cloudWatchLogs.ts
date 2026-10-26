@@ -61,9 +61,9 @@ async function* getAllStages() {
       const stages = await apiClient.send(new GetStagesCommand({ restApiId }));
       const stageNames = stages.item!.map((s) => s.stageName!).filter(Boolean);
       yield* stageNames.map((stageName) => ({ restApiId, stageName }));
-    } catch (e: any) {
+    } catch (error: any) {
       console.warn(
-        `Skipping API '${restApiId}' in cloudwatch log audit: ${e.message}`
+        `Skipping API '${restApiId}' in cloudwatch log audit: ${error.message}`
       );
     }
   }

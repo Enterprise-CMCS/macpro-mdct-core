@@ -8,9 +8,10 @@ const client = new IAMClient({ region: "us-east-1" });
 
 export async function audit() {
   const label = "IAM Roles (project-scoped, excluding service-linked)";
-  const allRoles = (await Array.fromAsync(getAllIamRoles()))
-    .filter((role) => PROJECT_NAMES.some(p => role.startsWith(p)));
-  
+  const allRoles = (await Array.fromAsync(getAllIamRoles())).filter((role) =>
+    PROJECT_NAMES.some((p) => role.startsWith(p))
+  );
+
   const { unmanagedIds, ignoreCounts } = classifyResources({
     allResourceIds: allRoles,
     managedIds: await getResourceIds(ResourceTypes.IamRole),

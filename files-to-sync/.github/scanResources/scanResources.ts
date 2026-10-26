@@ -67,8 +67,9 @@ async function main() {
     let auditResult;
     try {
       auditResult = await audit();
-    } catch (e: any) {
-      auditResult = { warning: e.message };
+    } catch (error: any) {
+      log(`⚠️ ${error.message}`);
+      continue;
     }
     if ("warning" in auditResult) {
       log(`⚠️ ${auditResult.warning}`);
